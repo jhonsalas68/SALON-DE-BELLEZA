@@ -21,6 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'email',
         'password',
+        'role_id',
     ];
 
     /**
@@ -44,5 +45,37 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Relationship with Role.
+     */
+    public function role(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Check if user has a specific role by slug.
+     */
+    public function hasRole(string $roleSlug): bool
+    {
+        return $this->role && $this->role->slug === $roleSlug;
+    }
+
+    /**
+     * Check if user has a specific permission by slug.
+     */
+    public function hasPermission(string $permissionSlug): bool
+    {
+        return $this->role && $this->role->hasPermission($permissionSlug);
+    }
+
+    /**
+     * Relationship with activity logs.
+     */
+    public function activityLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
     }
 }

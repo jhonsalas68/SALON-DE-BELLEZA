@@ -1,0 +1,82 @@
+@extends('layouts.app')
+
+@section('title', 'Bitácora de Auditoría - Salón de Belleza Anita')
+
+@section('header')
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Registro de Auditoría</h1>
+        <p class="text-gray-500 font-medium">Historial completo de acciones y seguridad.</p>
+    </div>
+    <div class="text-right">
+        <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Total: {{ $logs->total() }} registros</span>
+    </div>
+</div>
+@endsection
+
+@section('content')
+<div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-gray-50/50">
+                    <th class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest">Actor</th>
+                    <th class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Operación</th>
+                    <th class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest">Detalles de la Acción</th>
+                    <th class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest">Origen</th>
+                    <th class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest">Tiempo</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @foreach($logs as $log)
+                <tr class="hover:bg-indigo-50/30 transition duration-150 group">
+                    <td class="px-8 py-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                {{ substr($log->user->email ?? 'S', 0, 1) }}
+                            </div>
+                            <span class="text-sm font-bold text-gray-800">{{ $log->user->email ?? 'Sistema' }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 text-center">
+                        <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest
+                            @if($log->action == 'CREATE' || $log->action == 'CREATE_ROLE') bg-green-100 text-green-700
+                            @elseif($log->action == 'UPDATE' || $log->action == 'UPDATE_ROLE') bg-blue-100 text-blue-700
+                            @elseif($log->action == 'DELETE' || $log->action == 'DELETE_ROLE') bg-red-100 text-red-700
+                            @else bg-gray-100 text-gray-600 @endif">
+                            {{ str_replace('_', ' ', $log->action) }}
+                        </span>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-sm text-gray-600 font-medium">{{ $log->description }}</p>
+                        @if($log->details)
+                            <button class="text-[10px] text-indigo-500 font-black hover:underline mt-1" 
+                                onclick="console.log(@json($log->details)); alert('Detalles cargados en consola');">
+                                <i class="fas fa-terminal mr-1"></i>VER JSON
+                            </button>
+                        @endif
+                    </td>
+                    <td class="px-8 py-6">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase leading-relaxed">
+                            <span class="block"><i class="fas fa-network-wired mr-1 text-indigo-300"></i>{{ $log->ip_address }}</span>
+                            <span class="block truncate w-32"><i class="fas fa-desktop mr-1 text-indigo-300"></i>{{ $log->user_agent }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6">
+                        <div class="text-sm text-gray-500 font-medium whitespace-nowrap">
+                            {{ $log->created_at->format('d M, Y') }}
+                            <span class="block text-[10px] text-gray-300">{{ $log->created_at->format('H:i:s') }}</span>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    @if($logs->hasPages())
+    <div class="px-8 py-6 border-t border-gray-50">
+        {{ $logs->links() }}
+    </div>
+    @endif
+</div>
+@endsection

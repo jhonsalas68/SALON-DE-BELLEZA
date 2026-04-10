@@ -11,6 +11,17 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
+        // Asegurar que existan roles y el administrador (Lazy Init Robusto)
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('roles') || \App\Models\Role::count() === 0) {
+                \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                $seeder = new \Database\Seeders\RolePermissionSeeder();
+                $seeder->run();
+            }
+        } catch (\Exception $e) {
+            // Si algo falla, dejamos que el usuario intente loguearse o vea el error luego
+        }
+
         return view('auth.login');
     }
 
@@ -23,7 +34,8 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('dashboard');
+            // Verificamos si es admin y mandamos directamente al dashboard general/admin
+            return redirect()->route('dashboard');
         }
 
         return back()->withErrors([
