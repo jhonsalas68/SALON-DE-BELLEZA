@@ -19,8 +19,8 @@ Route::get('/setup-system', function () {
         // Limpiamos caché para forzar que Laravel lea el .env correctamente
         \Illuminate\Support\Facades\Artisan::call('optimize:clear');
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'RolePermissionSeeder', '--force' => true]);
-        return "Migraciones y seeders ejecutados perfectamente. Revisa la BD.";
+        \App\Models\ActivityLog::create(['action' => 'SYSTEM', 'description' => 'Sistema reiniciado y sincronizado']);
+        return "Migraciones, seeders y prueba de bitácora ejecutados perfectamente. Revisa la BD.";
     } catch (\Exception $e) {
         return "ERROR AL MIGRAR: " . $e->getMessage() . " <br><br> EN LÍNEA: " . $e->getLine() . " <br> ARCHIVO: " . $e->getFile();
     }
@@ -30,8 +30,8 @@ Route::get('/setup-system', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 
 Route::middleware(['auth'])->group(function () {
-    // Gestión de Usuarios (Admin y Recepcionista)
-    Route::middleware(['role:administrador,recepcionista'])->group(function () {
+    // Gestión de Usuarios (Protegido por permiso)
+    Route::middleware(['permission:manage_users'])->group(function () {
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/create', [UserController::class, 'create'])->name('users.create');
         Route::post('users', [UserController::class, 'store'])->name('users.store');
@@ -41,15 +41,22 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
-    // Roles y Bitácora (Solo Admin)
-    Route::middleware(['role:administrador'])->group(function () {
+    // Gestión de Roles (Protegido por permiso)
+    Route::middleware(['permission:manage_roles'])->group(function () {
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
         Route::get('roles/create', [RoleController::class, 'create'])->name('roles.create');
         Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
         Route::get('roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
         Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
         Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    });
 
+    // Bitácora (Protegido por permiso)
+    Route::middleware(['permission:view_audit_log'])->group(function () {
         Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity_logs.index');
     });
+
+    // Perfil y Configuraciones
+    Route::get('profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
+    Route::put('profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
 });

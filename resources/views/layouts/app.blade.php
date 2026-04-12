@@ -7,91 +7,132 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Poppins', sans-serif; background: #f3f4f6; }
-        .sidebar { background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%); transition: all 0.3s ease; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .nav-link { transition: all 0.2s ease; border-radius: 0.75rem; margin-bottom: 0.5rem; }
-        .nav-link:hover { background: rgba(255, 255, 255, 0.1); transform: translateX(5px); }
-        .nav-link.active { background: #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
-        .content-area { border-radius: 2rem 0 0 0; }
-        @media (max-width: 1024px) { .content-area { border-radius: 0; } }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: #fef2f2; 
+            color: #374151; 
+        }
+        
+        .sidebar { 
+            background: #ffffff; 
+            border-right: 1px solid #fee2e2;
+        }
+
+        .nav-link { 
+            transition: all 0.2s ease;
+            border-radius: 0.75rem;
+            margin-bottom: 0.25rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .nav-link:hover { 
+            background: #fff1f2; 
+            color: #be123c;
+        }
+
+        .nav-link.active { 
+            background: #fb7185;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(251, 113, 133, 0.4);
+        }
+
+        .content-area { 
+            background: #ffffff;
+            border-radius: 1.5rem 0 0 1.5rem; 
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .glass-avatar { 
+            background: #fff5f5; 
+            border: 1px solid #fee2e2;
+        }
+
+        @media (max-width: 1024px) { .content-area { border-radius: 0; margin: 0; } }
     </style>
     @yield('styles')
 </head>
-<body class="bg-indigo-950 flex">
+<body class="bg-white flex select-none">
     <!-- Sidebar -->
-    <aside class="w-72 min-h-screen text-white p-6 sticky top-0 hidden lg:block overflow-y-auto">
+    <aside class="w-64 sidebar min-h-screen p-6 hidden lg:flex flex-col">
         <div class="flex items-center space-x-3 mb-10 px-2">
-            <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+            <div class="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center shadow-sm">
                 <i class="fas fa-spa text-white"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight">Anita Salon</h1>
-                <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest">Premium Beauty</p>
+                <h1 class="text-xl font-bold text-gray-800 tracking-tight">Anita Salon</h1>
+                <p class="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Belleza Premium</p>
             </div>
         </div>
 
-        <nav>
-            <p class="text-[11px] text-indigo-300 font-bold uppercase tracking-widest mb-4 px-2 opacity-60">Menú Principal</p>
+        <nav class="space-y-1">
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4 px-2">Menu</p>
             <a href="{{ route('dashboard') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="fas fa-th-large"></i>
-                <span>Dashboard</span>
+                <i class="fas fa-home"></i>
+                <span class="font-medium">Inicio</span>
             </a>
             
-            <p class="text-[11px] text-indigo-300 font-bold uppercase tracking-widest mt-8 mb-4 px-2 opacity-60">Administración</p>
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-8 mb-4 px-2">Administración</p>
             
-            @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('recepcionista'))
+            @if(auth()->user()->hasPermission('manage_users'))
             <a href="{{ route('users.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                <i class="fas fa-users-cog"></i>
-                <span>Usuarios</span>
+                <i class="fas fa-users"></i>
+                <span class="font-medium">Usuarios</span>
             </a>
             @endif
 
-            @if(auth()->user()->hasRole('administrador'))
+            @if(auth()->user()->hasPermission('manage_roles'))
             <a href="{{ route('roles.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('roles.*') ? 'active' : '' }}">
-                <i class="fas fa-user-shield"></i>
-                <span>Roles y Permisos</span>
-            </a>
-            <a href="{{ route('activity_logs.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('activity_logs.*') ? 'active' : '' }}">
-                <i class="fas fa-history"></i>
-                <span>Bitácora</span>
+                <i class="fas fa-user-lock"></i>
+                <span class="font-medium">Accesos</span>
             </a>
             @endif
 
-            <p class="text-[11px] text-indigo-300 font-bold uppercase tracking-widest mt-8 mb-4 px-2 opacity-60">Servicios</p>
-            <a href="#" class="nav-link flex items-center space-x-3 p-3 text-white/60 cursor-not-allowed">
-                <i class="fas fa-calendar-check text-indigo-400"></i>
-                <span>Citas (Próximamente)</span>
+            @if(auth()->user()->hasPermission('view_audit_log'))
+            <a href="{{ route('activity_logs.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('activity_logs.*') ? 'active' : '' }}">
+                <i class="fas fa-list-ul"></i>
+                <span class="font-medium">Bitácora</span>
             </a>
-            <a href="#" class="nav-link flex items-center space-x-3 p-3 text-white/60 cursor-not-allowed">
-                <i class="fas fa-cut text-indigo-400"></i>
-                <span>Servicios (Próximamente)</span>
-            </a>
-        </nav>
+            @endif
 
-        <div class="absolute bottom-10 left-6 right-6">
-            <div class="bg-white/10 p-4 rounded-2xl flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-full bg-indigo-500 overflow-hidden border-2 border-indigo-400">
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->email) }}&background=6366f1&color=fff" alt="User">
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-8 mb-4 px-2">Agenda</p>
+            <a href="#" class="nav-link flex items-center space-x-3 p-3 opacity-50 cursor-not-allowed">
+                <i class="fas fa-calendar"></i>
+                <span class="font-medium">Citas</span>
+            </a>
+
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-8 mb-4 px-2">Mi Cuenta</p>
+            <a href="{{ route('profile.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                <i class="fas fa-cog"></i>
+                <span class="font-medium">Configuraciones</span>
+            </a>
+
+            <div class="mt-8 pt-8 border-t border-rose-50">
+                <div class="p-4 bg-rose-50/50 rounded-2xl flex items-center space-x-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white font-bold text-xs uppercase">
+                        {{ substr(auth()->user()->email, 0, 1) }}
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-bold text-gray-800 truncate">{{ explode('@', auth()->user()->email)[0] }}</p>
+                        <p class="text-[9px] text-gray-400 font-black uppercase tracking-widest">{{ auth()->user()->role->name ?? 'User' }}</p>
+                    </div>
                 </div>
-                <div class="overflow-hidden">
-                    <p class="text-xs font-bold truncate">{{ auth()->user()->email }}</p>
-                    <p class="text-[10px] text-indigo-300">{{ auth()->user()->role->name ?? 'Usuario' }}</p>
-                </div>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-full bg-gray-900 hover:bg-rose-600 text-white p-3 rounded-xl transition-all font-bold flex items-center justify-center space-x-2 text-xs shadow-lg shadow-gray-200">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Salir del Sistema</span>
+                    </button>
+                </form>
             </div>
-            <form action="{{ route('logout') }}" method="POST" class="mt-4">
-                @csrf
-                <button type="submit" class="w-full bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white p-3 rounded-xl transition font-bold flex items-center justify-center space-x-2">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Cerrar Sesión</span>
-                </button>
-            </form>
-        </div>
+        </nav>
     </aside>
 
     <!-- Content Area -->
-    <main class="flex-1 bg-white min-h-screen content-area shadow-2xl overflow-y-auto">
+    <main class="flex-1 bg-gray-50 min-h-screen content-area overflow-y-auto">
         <header class="p-8 pb-0">
             @if(session('success'))
                 <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-xl animate-fade-in">

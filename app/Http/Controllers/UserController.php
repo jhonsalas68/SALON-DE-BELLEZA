@@ -8,9 +8,11 @@ use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\LogsActivity;
 
 class UserController extends Controller
 {
+    use LogsActivity;
     public function index()
     {
         $users = User::with('role')->paginate(10);
@@ -87,17 +89,5 @@ class UserController extends Controller
         $this->logActivity('DELETE', "Usuario eliminado: {$email}", $userData);
 
         return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
-    }
-
-    private function logActivity($action, $description, $details = null)
-    {
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => $action,
-            'description' => $description,
-            'details' => $details,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
     }
 }

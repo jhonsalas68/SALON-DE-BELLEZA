@@ -41,7 +41,6 @@
                                 class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                             <div class="ml-4">
                                 <span class="block text-sm font-bold text-gray-800 group-hover:text-indigo-700 transition-colors">{{ $p->name }}</span>
-                                <span class="block text-[10px] text-gray-400 font-bold uppercase">{{ $p->slug }}</span>
                             </div>
                         </label>
                         @endforeach

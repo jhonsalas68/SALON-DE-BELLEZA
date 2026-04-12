@@ -39,21 +39,36 @@
                         </div>
                     </td>
                     <td class="px-8 py-6 text-center">
-                        <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest
-                            @if($log->action == 'CREATE' || $log->action == 'CREATE_ROLE') bg-green-100 text-green-700
-                            @elseif($log->action == 'UPDATE' || $log->action == 'UPDATE_ROLE') bg-blue-100 text-blue-700
-                            @elseif($log->action == 'DELETE' || $log->action == 'DELETE_ROLE') bg-red-100 text-red-700
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm
+                            @if($log->action == 'CREATE' || $log->action == 'CREATE_ROLE') bg-emerald-100 text-emerald-700
+                            @elseif($log->action == 'UPDATE' || $log->action == 'UPDATE_ROLE') bg-amber-100 text-amber-700
+                            @elseif($log->action == 'DELETE' || $log->action == 'DELETE_ROLE') bg-rose-100 text-rose-700
+                            @elseif($log->action == 'LOGIN') bg-indigo-100 text-indigo-700
+                            @elseif($log->action == 'LOGOUT') bg-slate-100 text-slate-700
                             @else bg-gray-100 text-gray-600 @endif">
+                            <i class="fas
+                                @if($log->action == 'CREATE' || $log->action == 'CREATE_ROLE') fa-plus-circle
+                                @elseif($log->action == 'UPDATE' || $log->action == 'UPDATE_ROLE') fa-edit
+                                @elseif($log->action == 'DELETE' || $log->action == 'DELETE_ROLE') fa-trash
+                                @elseif($log->action == 'LOGIN') fa-sign-in-alt
+                                @elseif($log->action == 'LOGOUT') fa-sign-out-alt
+                                @else fa-info-circle @endif mr-1"></i>
                             {{ str_replace('_', ' ', $log->action) }}
                         </span>
                     </td>
                     <td class="px-8 py-6">
-                        <p class="text-sm text-gray-600 font-medium">{{ $log->description }}</p>
+                        <p class="text-sm text-gray-800 font-bold mb-1">{{ $log->description }}</p>
                         @if($log->details)
-                            <button class="text-[10px] text-indigo-500 font-black hover:underline mt-1" 
-                                onclick="console.log(@json($log->details)); alert('Detalles cargados en consola');">
-                                <i class="fas fa-terminal mr-1"></i>VER JSON
-                            </button>
+                            <div class="mt-2">
+                                <details class="group">
+                                    <summary class="text-[9px] font-black text-indigo-400 uppercase cursor-pointer hover:text-indigo-600 transition list-none">
+                                        <i class="fas fa-chevron-right mr-1 group-open:rotate-90 transition-transform"></i> Ver datos específicos
+                                    </summary>
+                                    <div class="mt-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                        <pre class="text-[10px] text-gray-500 font-mono overflow-x-auto">@json($log->details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)</pre>
+                                    </div>
+                                </details>
+                            </div>
                         @endif
                     </td>
                     <td class="px-8 py-6">

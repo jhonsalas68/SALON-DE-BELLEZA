@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use App\Models\Permission;
 use Illuminate\Http\Request;
-use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\LogsActivity;
 
 class RoleController extends Controller
 {
+    use LogsActivity;
     public function index()
     {
         $roles = Role::with('permissions')->withCount('users')->get();
@@ -84,17 +85,5 @@ class RoleController extends Controller
         $this->logActivity('DELETE_ROLE', "Rol eliminado: {$roleName}");
 
         return redirect()->route('roles.index')->with('success', 'Rol eliminado exitosamente.');
-    }
-
-    private function logActivity($action, $description, $details = null)
-    {
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => $action,
-            'description' => $description,
-            'details' => $details,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
     }
 }

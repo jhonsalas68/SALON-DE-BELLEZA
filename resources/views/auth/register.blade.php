@@ -75,6 +75,20 @@
                 @csrf
                 <div class="input-group">
                     <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        placeholder=" "
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition"
+                        value="{{ old('name') }}"
+                        required
+                    >
+                    <label for="name" class="floating-label">Nombre Completo</label>
+                    <i class="fas fa-user absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+
+                <div class="input-group">
+                    <input 
                         type="email" 
                         id="email" 
                         name="email" 
