@@ -21,6 +21,7 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'Ver Bitácora', 'slug' => 'view_audit_log'],
             ['name' => 'Gestionar Citas', 'slug' => 'manage_appointments'],
             ['name' => 'Ver Reportes', 'slug' => 'view_reports'],
+            ['name' => 'Gestionar Inventario', 'slug' => 'manage_inventory'],
         ];
 
         foreach ($permissions as $p) {
@@ -32,7 +33,7 @@ class RolePermissionSeeder extends Seeder
             'administrador' => [
                 'name' => 'Administrador',
                 'description' => 'Acceso total al sistema',
-                'permissions' => ['manage_users', 'manage_roles', 'view_audit_log', 'manage_appointments', 'view_reports']
+                'permissions' => ['manage_users', 'manage_roles', 'view_audit_log', 'manage_appointments', 'view_reports', 'manage_inventory']
             ],
             'recepcionista' => [
                 'name' => 'Recepcionista',

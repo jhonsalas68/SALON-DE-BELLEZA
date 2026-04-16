@@ -62,8 +62,7 @@
             <div class="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center shadow-sm">
                 <i class="fas fa-spa text-white"></i>
             </div>
-            <div>
-                <h1 class="text-xl font-bold text-gray-800 tracking-tight">Anita Salon</h1>
+                <h1 class="text-xl font-bold text-gray-800 tracking-tight">Salon Anita</h1>
                 <p class="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Belleza Premium</p>
             </div>
         </div>
@@ -95,6 +94,18 @@
             <a href="{{ route('activity_logs.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('activity_logs.*') ? 'active' : '' }}">
                 <i class="fas fa-list-ul"></i>
                 <span class="font-medium">Bitácora</span>
+            </a>
+            @endif
+
+            @if(auth()->user()->hasPermission('manage_inventory'))
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-8 mb-4 px-2">Inventario</p>
+            <a href="{{ route('promotores.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('promotores.*') ? 'active' : '' }}">
+                <i class="fas fa-user-tie"></i>
+                <span class="font-medium">Promotores</span>
+            </a>
+            <a href="{{ route('productos.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('productos.*') ? 'active' : '' }}">
+                <i class="fas fa-box"></i>
+                <span class="font-medium">Productos</span>
             </a>
             @endif
 

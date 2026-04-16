@@ -6,6 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\PromotorController;
+use App\Http\Controllers\ProductoController;
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -18,7 +20,8 @@ Route::get('/setup-system', function () {
     try {
         // Limpiamos caché para forzar que Laravel lea el .env correctamente
         \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'RolePermissionSeeder', '--force' => true]);
         \App\Models\ActivityLog::create(['action' => 'SYSTEM', 'description' => 'Sistema reiniciado y sincronizado']);
         return "Migraciones, seeders y prueba de bitácora ejecutados perfectamente. Revisa la BD.";
     } catch (\Exception $e) {
@@ -59,4 +62,12 @@ Route::middleware(['auth'])->group(function () {
     // Perfil y Configuraciones
     Route::get('profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
     Route::put('profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
+    // Productos y Catálogo (Ver es público para usuarios autenticados, Gestionar requiere permiso)
+    Route::get('productos', [ProductoController::class, 'index'])->name('productos.index');
+
+    Route::middleware(['permission:manage_inventory'])->group(function () {
+        Route::resource('promotores', PromotorController::class);
+        Route::resource('productos', ProductoController::class)->except(['index']);
+    });
 });

@@ -10,6 +10,9 @@ class DashboardController extends Controller
     public function index()
     {
         $logsCount = \App\Models\ActivityLog::count();
+        $promotoresCount = \App\Models\Promotor::count();
+        $productosCount = \App\Models\Producto::count();
+
         \Illuminate\Support\Facades\Log::info("Dashboard accedido. Conteo de logs: " . $logsCount);
         
         return view('dashboard', [
@@ -18,6 +21,8 @@ class DashboardController extends Controller
                 'users_count' => \App\Models\User::count(),
                 'roles_count' => \App\Models\Role::count(),
                 'logs_count' => $logsCount,
+                'promotores_count' => $promotoresCount,
+                'productos_count' => $productosCount,
                 'appointments_today' => 0, // No table yet
                 'total_sales' => 0,         // No table yet
             ],

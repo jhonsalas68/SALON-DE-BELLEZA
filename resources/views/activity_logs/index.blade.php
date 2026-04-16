@@ -78,9 +78,10 @@
                         </div>
                     </td>
                     <td class="px-8 py-6">
-                        <div class="text-sm text-gray-500 font-medium whitespace-nowrap">
-                            {{ $log->created_at->format('d M, Y') }}
-                            <span class="block text-[10px] text-gray-300">{{ $log->created_at->format('H:i:s') }}</span>
+                        <div class="text-xs text-gray-500 font-bold whitespace-nowrap bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 inline-block">
+                            <i class="far fa-calendar-alt mr-1 text-indigo-400"></i> {{ $log->created_at->format('d/m/Y') }}
+                            <span class="mx-1 text-gray-300">|</span>
+                            <i class="far fa-clock mr-1 text-indigo-400"></i> {{ $log->created_at->format('h:i A') }}
                         </div>
                     </td>
                 </tr>
