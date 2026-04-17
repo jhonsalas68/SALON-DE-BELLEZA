@@ -68,7 +68,9 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|min:6|confirmed|regex:/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/',
+        ], [
+            'password.regex' => 'La contraseña necesita mayúscula, minúscula y número.',
         ]);
 
         $user = User::create([

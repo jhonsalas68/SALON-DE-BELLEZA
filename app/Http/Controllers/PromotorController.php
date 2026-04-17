@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Promotor;
 use Illuminate\Http\Request;
+use App\Traits\LogsActivity;
 
 class PromotorController extends Controller
 {
+    use LogsActivity;
     public function index()
     {
         $promotores = Promotor::latest()->get();
@@ -29,6 +31,8 @@ class PromotorController extends Controller
 
         Promotor::create($request->all());
 
+        $this->logActivity('CREATE', "Promotor creado: {$request->nombre}", $request->all());
+
         return redirect()->route('promotores.index')->with('success', 'Promotor creado exitosamente.');
     }
 
@@ -47,14 +51,25 @@ class PromotorController extends Controller
             'notas' => 'nullable|string',
         ]);
 
+        $oldData = $promotore->toArray();
         $promotore->update($request->all());
+
+        $this->logActivity('UPDATE', "Promotor actualizado: {$request->nombre}", [
+            'old' => $oldData,
+            'new' => $promotore->fresh()->toArray()
+        ]);
 
         return redirect()->route('promotores.index')->with('success', 'Promotor actualizado exitosamente.');
     }
 
     public function destroy(Promotor $promotore)
     {
+        $promotorData = $promotore->toArray();
+        $nombre = $promotore->nombre;
         $promotore->delete();
+        
+        $this->logActivity('DELETE', "Promotor eliminado: {$nombre}", $promotorData);
+        
         return redirect()->route('promotores.index')->with('success', 'Promotor eliminado exitosamente.');
     }
 }

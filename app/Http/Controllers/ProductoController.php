@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use App\Models\Promotor;
 use Illuminate\Http\Request;
+use App\Traits\LogsActivity;
 
 class ProductoController extends Controller
 {
+    use LogsActivity;
     public function index()
     {
         $productos = Producto::with('promotor')->latest()->get();
@@ -41,6 +43,8 @@ class ProductoController extends Controller
         }
 
         Producto::create($data);
+
+        $this->logActivity('CREATE', "Producto creado: {$request->nombre}", $data);
 
         return redirect()->route('productos.index')->with('success', 'Producto registrado exitosamente.');
     }
@@ -76,14 +80,25 @@ class ProductoController extends Controller
             $data['imagen'] = 'uploads/productos/'.$imageName;
         }
 
+        $oldData = $producto->toArray();
         $producto->update($data);
+
+        $this->logActivity('UPDATE', "Producto actualizado: {$request->nombre}", [
+            'old' => $oldData,
+            'new' => $producto->fresh()->toArray()
+        ]);
 
         return redirect()->route('productos.index')->with('success', 'Producto actualizado exitosamente.');
     }
 
     public function destroy(Producto $producto)
     {
+        $productData = $producto->toArray();
+        $nombre = $producto->nombre;
         $producto->delete();
+        
+        $this->logActivity('DELETE', "Producto eliminado: {$nombre}", $productData);
+        
         return redirect()->route('productos.index')->with('success', 'Producto eliminado exitosamente.');
     }
 }
