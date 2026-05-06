@@ -16,5 +16,12 @@ php artisan view:cache
 # Ejecutar migraciones y seeders automáticamente en el despliegue
 php artisan migrate --force --seed
 
+# Asegurarnos de que no haya otros módulos MPM activos que crashean Apache
+rm -f /etc/apache2/mods-enabled/mpm_event.conf
+rm -f /etc/apache2/mods-enabled/mpm_event.load
+rm -f /etc/apache2/mods-enabled/mpm_worker.conf
+rm -f /etc/apache2/mods-enabled/mpm_worker.load
+a2enmod mpm_prefork
+
 # Iniciar Apache en primer plano
-apache2-foreground
+exec apache2-foreground
