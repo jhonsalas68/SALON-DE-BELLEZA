@@ -46,6 +46,10 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
+# Ensure only one MPM is loaded (prefork is required for mod_php)
+RUN a2dismod mpm_event mpm_worker || true
+RUN a2enmod mpm_prefork || true
+
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
 
