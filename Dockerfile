@@ -34,7 +34,7 @@ COPY . /var/www/html
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
 # Install NPM dependencies and build Vite assets
-RUN npm install
+RUN npm cache clean --force && npm install --network-timeout=1000000
 RUN npm run build
 
 # Set directory permissions for Laravel
