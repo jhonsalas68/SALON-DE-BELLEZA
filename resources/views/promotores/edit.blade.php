@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Editar Promotor - Salon Anita')
+@section('title', 'Editar Proveedor - Salon Anita')
 
 @section('header')
     <div>
-        <h2 class="text-3xl font-extrabold text-gray-800 tracking-tight">Editar Promotor</h2>
+        <h2 class="text-3xl font-extrabold text-gray-800 tracking-tight">Editar Proveedor</h2>
         <p class="text-gray-500 font-medium">Actualiza la información de {{ $promotor->nombre }}.</p>
     </div>
 @endsection
@@ -52,7 +52,7 @@
             <div class="mt-10 flex items-center justify-end space-x-4">
                 <a href="{{ route('promotores.index') }}" class="px-6 py-3 rounded-2xl font-bold text-gray-400 hover:text-gray-600 transition-all">Cancelar</a>
                 <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white px-10 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-rose-100">
-                    Actualizar Promotor
+                    Actualizar Proveedor
                 </button>
             </div>
         </form>

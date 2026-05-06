@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Promotores - Salon Anita')
+@section('title', 'Proveedores - Salon Anita')
 
 @section('header')
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-3xl font-extrabold text-gray-800 tracking-tight">Promotores</h2>
-            <p class="text-gray-500 font-medium">Gestiona los proveedores y promotores de marca.</p>
+            <h2 class="text-3xl font-extrabold text-gray-800 tracking-tight">Proveedores</h2>
+            <p class="text-gray-500 font-medium">Gestiona los proveedores y distribuidores de marca.</p>
         </div>
         <a href="{{ route('promotores.create') }}" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-rose-100 flex items-center justify-center space-x-2">
             <i class="fas fa-plus text-xs"></i>
-            <span>Nuevo Promotor</span>
+            <span>Nuevo Proveedor</span>
         </a>
     </div>
 @endsection
@@ -21,7 +21,7 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-rose-50/30">
-                    <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50">Promotor</th>
+                    <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50">Proveedor</th>
                     <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50">Empresa</th>
                     <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50">Contacto</th>
                     <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50 text-right">Acciones</th>
@@ -56,7 +56,7 @@
                             <a href="{{ route('promotores.edit', $promotor) }}" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <form action="{{ route('promotores.destroy', $promotor) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este promotor?')">
+                            <form action="{{ route('promotores.destroy', $promotor) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este proveedor?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Eliminar">
@@ -70,7 +70,7 @@
                 <tr>
                     <td colspan="4" class="p-10 text-center text-gray-400">
                         <i class="fas fa-box-open text-4xl mb-3 block"></i>
-                        <p class="font-medium">No hay promotores registrados.</p>
+                        <p class="font-medium">No hay proveedores registrados.</p>
                     </td>
                 </tr>
                 @endforelse

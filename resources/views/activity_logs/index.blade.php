@@ -15,6 +15,29 @@
 @endsection
 
 @section('content')
+<div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-6">
+    <form action="{{ route('activity_logs.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-4">
+        <div class="flex-1 w-full">
+            <select name="user_id" class="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 font-medium">
+                <option value="">Todos los usuarios</option>
+                @foreach($users as $user)
+                    <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
+                        {{ $user->email }} ({{ $user->role->name ?? 'Sin rol' }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200 transition-all">
+                Filtrar
+            </button>
+            @if(request('user_id'))
+                <a href="{{ route('activity_logs.index') }}" class="px-6 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">Limpiar</a>
+            @endif
+        </div>
+    </form>
+</div>
+
 <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left">

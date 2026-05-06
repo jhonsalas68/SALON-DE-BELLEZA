@@ -47,7 +47,12 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex justify-end space-x-2">
-                            <a href="{{ route('users.edit', $u) }}" class="text-gray-400 hover:text-rose-600 transition">
+                            @if(auth()->user()->hasPermission('view_audit_log'))
+                            <a href="{{ route('activity_logs.index', ['user_id' => $u->id]) }}" class="text-gray-400 hover:text-indigo-600 transition" title="Ver actividades de este usuario">
+                                <i class="fas fa-history text-sm"></i>
+                            </a>
+                            @endif
+                            <a href="{{ route('users.edit', $u) }}" class="text-gray-400 hover:text-rose-600 transition" title="Editar">
                                 <i class="fas fa-edit text-sm"></i>
                             </a>
                             <form action="{{ route('users.destroy', $u) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar usuario?')">

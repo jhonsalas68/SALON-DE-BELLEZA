@@ -70,4 +70,23 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('promotores', PromotorController::class);
         Route::resource('productos', ProductoController::class)->except(['index']);
     });
+
+    // Horarios (CU7 y CU8)
+    Route::get('horarios', [\App\Http\Controllers\HorarioController::class, 'index'])
+        ->name('horarios.index')
+        ->middleware('permission:view_schedules');
+        
+    Route::middleware(['permission:manage_schedules'])->group(function () {
+        Route::resource('horarios', \App\Http\Controllers\HorarioController::class)->except(['index']);
+    });
+
+    // Servicios (CU14)
+    Route::middleware(['permission:manage_services'])->group(function () {
+        Route::resource('servicios', \App\Http\Controllers\ServicioController::class);
+    });
+
+    // Clientes (CU11)
+    Route::middleware(['permission:manage_appointments'])->group(function () {
+        Route::get('clientes', [\App\Http\Controllers\ClienteController::class, 'index'])->name('clientes.index');
+    });
 });

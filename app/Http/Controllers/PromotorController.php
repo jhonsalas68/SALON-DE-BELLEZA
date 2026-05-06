@@ -31,7 +31,7 @@ class PromotorController extends Controller
 
         Promotor::create($request->all());
 
-        $this->logActivity('CREATE', "Promotor creado: {$request->nombre}", $request->all());
+        $this->logActivity('CREATE', "Proveedor creado: {$request->nombre}", $request->all());
 
         return redirect()->route('promotores.index')->with('success', 'Promotor creado exitosamente.');
     }
@@ -54,7 +54,7 @@ class PromotorController extends Controller
         $oldData = $promotore->toArray();
         $promotore->update($request->all());
 
-        $this->logActivity('UPDATE', "Promotor actualizado: {$request->nombre}", [
+        $this->logActivity('UPDATE', "Proveedor actualizado: {$request->nombre}", [
             'old' => $oldData,
             'new' => $promotore->fresh()->toArray()
         ]);
@@ -68,7 +68,7 @@ class PromotorController extends Controller
         $nombre = $promotore->nombre;
         $promotore->delete();
         
-        $this->logActivity('DELETE', "Promotor eliminado: {$nombre}", $promotorData);
+        $this->logActivity('DELETE', "Proveedor eliminado: {$nombre}", $promotorData);
         
         return redirect()->route('promotores.index')->with('success', 'Promotor eliminado exitosamente.');
     }

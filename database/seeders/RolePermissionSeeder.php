@@ -22,6 +22,10 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'Gestionar Citas', 'slug' => 'manage_appointments'],
             ['name' => 'Ver Reportes', 'slug' => 'view_reports'],
             ['name' => 'Gestionar Inventario', 'slug' => 'manage_inventory'],
+            ['name' => 'Consultar Stock', 'slug' => 'view_inventory'],
+            ['name' => 'Gestionar Horarios', 'slug' => 'manage_schedules'],
+            ['name' => 'Consultar Horarios', 'slug' => 'view_schedules'],
+            ['name' => 'Gestionar Servicios', 'slug' => 'manage_services'],
         ];
 
         foreach ($permissions as $p) {
@@ -33,17 +37,17 @@ class RolePermissionSeeder extends Seeder
             'administrador' => [
                 'name' => 'Administrador',
                 'description' => 'Acceso total al sistema',
-                'permissions' => ['manage_users', 'manage_roles', 'view_audit_log', 'manage_appointments', 'view_reports', 'manage_inventory']
+                'permissions' => ['manage_users', 'manage_roles', 'view_audit_log', 'manage_appointments', 'view_reports', 'manage_inventory', 'view_inventory', 'manage_schedules', 'view_schedules', 'manage_services']
             ],
             'recepcionista' => [
                 'name' => 'Recepcionista',
                 'description' => 'Gestión de citas y clientes',
-                'permissions' => ['manage_appointments', 'manage_users'] // Limited user management
+                'permissions' => ['manage_appointments', 'manage_users', 'view_schedules', 'view_inventory'] // Limited user management
             ],
             'estilista' => [
                 'name' => 'Estilista',
                 'description' => 'Consulta de agenda propia',
-                'permissions' => ['manage_appointments']
+                'permissions' => ['manage_appointments', 'view_schedules']
             ],
             'cliente' => [
                 'name' => 'Cliente',

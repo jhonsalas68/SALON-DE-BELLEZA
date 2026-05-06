@@ -58,7 +58,7 @@
                         @else
                             <span class="px-3 py-1 bg-gray-100 text-gray-400 rounded-full text-[10px] font-black uppercase tracking-widest">Agotado</span>
                         @endif
-                        @if(auth()->user()->hasPermission('manage_inventory'))
+                        @if(auth()->user()->hasPermission('manage_inventory') || auth()->user()->hasPermission('view_inventory'))
                             <p class="text-[10px] @if($producto->stock <= 5) text-rose-500 @else text-gray-400 @endif font-bold mt-1 uppercase">{{ $producto->stock }} en stock</p>
                         @endif
                     </td>
