@@ -21,8 +21,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+# Install PHP extensions (Incluyendo OPcache para aceleración)
+RUN docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd opcache
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -45,6 +45,28 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# ==========================================
+# SUPER OPTIMIZACIÓN DE RENDIMIENTO
+# ==========================================
+
+# 1. Configurar OPcache para precompilar Laravel (Hace la app 10x más rápida)
+RUN echo "opcache.enable=1\n\
+opcache.memory_consumption=128\n\
+opcache.interned_strings_buffer=8\n\
+opcache.max_accelerated_files=10000\n\
+opcache.revalidate_freq=0\n\
+opcache.validate_timestamps=0\n\
+opcache.save_comments=1" > /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+
+# 2. Optimizar Apache para la memoria RAM gratuita de Railway (evita bloqueos)
+RUN echo "<IfModule mpm_prefork_module>\n\
+    StartServers          1\n\
+    MinSpareServers       1\n\
+    MaxSpareServers       3\n\
+    MaxRequestWorkers     10\n\
+    MaxConnectionsPerChild 100\n\
+</IfModule>" > /etc/apache2/mods-available/mpm_prefork.conf
 
 # Ensure only one MPM is loaded (prefork is required for mod_php)
 RUN a2dismod mpm_event mpm_worker || true
