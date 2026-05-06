@@ -13,8 +13,8 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Ejecutar migraciones automáticamente en el despliegue
-php artisan migrate --force
+# Ejecutar migraciones y seeders automáticamente en el despliegue
+php artisan migrate --force --seed
 
 # Iniciar Apache en primer plano
 apache2-foreground
