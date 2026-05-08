@@ -82,16 +82,77 @@
                     <td class="px-8 py-6">
                         <p class="text-sm text-gray-800 font-bold mb-1">{{ $log->description }}</p>
                         @if($log->details)
-                            <div class="mt-2">
-                                <details class="group">
-                                    <summary class="text-[9px] font-black text-indigo-400 uppercase cursor-pointer hover:text-indigo-600 transition list-none">
-                                        <i class="fas fa-chevron-right mr-1 group-open:rotate-90 transition-transform"></i> Ver datos específicos
-                                    </summary>
-                                    <div class="mt-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                        <pre class="text-[10px] text-gray-500 font-mono overflow-x-auto">@json($log->details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)</pre>
-                                    </div>
-                                </details>
-                            </div>
+                            @php
+                                $detailsArray = is_string($log->details) ? json_decode($log->details, true) : $log->details;
+                            @endphp
+                            @if(is_array($detailsArray) && !empty($detailsArray))
+                                <div class="mt-3">
+                                    <details class="group bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm transition-all duration-300">
+                                        <summary class="flex justify-between items-center p-2.5 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors list-none">
+                                            <span class="text-[10px] font-bold text-indigo-600 flex items-center gap-2">
+                                                <i class="fas fa-list-ul"></i> Ver datos específicos
+                                            </span>
+                                            <i class="fas fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform duration-300 text-[10px]"></i>
+                                        </summary>
+                                        
+                                        <div class="p-3 bg-white border-t border-gray-100">
+                                            @if(isset($detailsArray['old']) && isset($detailsArray['new']))
+                                                <div class="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <h4 class="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                                                            <i class="fas fa-minus-circle"></i> Antes
+                                                        </h4>
+                                                        <div class="space-y-1">
+                                                            @foreach($detailsArray['old'] as $key => $value)
+                                                                @if(!is_array($value) && (!isset($detailsArray['new'][$key]) || $detailsArray['new'][$key] != $value))
+                                                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-rose-50/50 p-1.5 rounded-md border border-rose-100">
+                                                                        <span class="text-[8px] font-bold text-rose-400 uppercase truncate pr-2">{{ str_replace('_', ' ', $key) }}</span>
+                                                                        <span class="text-[10px] font-semibold text-rose-700 break-words text-left sm:text-right">{{ $value === null ? 'Nulo' : (is_bool($value) ? ($value ? 'Sí' : 'No') : $value) }}</span>
+                                                                    </div>
+                                                                @endif
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                                                            <i class="fas fa-plus-circle"></i> Después
+                                                        </h4>
+                                                        <div class="space-y-1">
+                                                            @foreach($detailsArray['new'] as $key => $value)
+                                                                @if(!is_array($value) && (!isset($detailsArray['old'][$key]) || $detailsArray['old'][$key] != $value))
+                                                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-emerald-50/50 p-1.5 rounded-md border border-emerald-100">
+                                                                        <span class="text-[8px] font-bold text-emerald-400 uppercase truncate pr-2">{{ str_replace('_', ' ', $key) }}</span>
+                                                                        <span class="text-[10px] font-semibold text-emerald-700 break-words text-left sm:text-right">{{ $value === null ? 'Nulo' : (is_bool($value) ? ($value ? 'Sí' : 'No') : $value) }}</span>
+                                                                    </div>
+                                                                @endif
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                                    @foreach($detailsArray as $key => $value)
+                                                        @if(!is_array($value) && !is_object($value))
+                                                            <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 p-1.5 rounded-md border border-gray-100">
+                                                                <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 sm:mb-0 truncate pr-2">{{ str_replace('_', ' ', $key) }}</span>
+                                                                <span class="text-[10px] font-semibold text-gray-800 break-words text-left sm:text-right">{{ $value === null ? 'Nulo' : (is_bool($value) ? ($value ? 'Sí' : 'No') : $value) }}</span>
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                                @foreach($detailsArray as $key => $value)
+                                                    @if(is_array($value) || is_object($value))
+                                                        <div class="mt-2 border-t border-gray-50 pt-2">
+                                                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">{{ str_replace('_', ' ', $key) }}</span>
+                                                            <pre class="text-[9px] text-gray-500 font-mono p-2 bg-gray-50 rounded-md overflow-x-auto border border-gray-100">@json($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)</pre>
+                                                        </div>
+                                                    @endif
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                    </details>
+                                </div>
+                            @endif
                         @endif
                     </td>
                     <td class="px-8 py-6">
