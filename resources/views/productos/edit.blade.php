@@ -36,7 +36,15 @@
                     @error('imagen') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="md:col-span-2 space-y-2">
+                <div class="space-y-2">
+                    <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Código del Producto</label>
+                    <input type="text" name="codigo" value="{{ old('codigo', $producto->codigo) }}" 
+                        class="w-full bg-rose-50/30 border border-rose-100 rounded-2xl p-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold"
+                        placeholder="Ej. SH-001">
+                    @error('codigo') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-2">
                     <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Nombre del Producto</label>
                     <input type="text" name="nombre" value="{{ old('nombre', $producto->nombre) }}" required 
                         class="w-full bg-rose-50/30 border border-rose-100 rounded-2xl p-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold"
@@ -67,11 +75,19 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Stock</label>
+                    <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Stock Actual</label>
                     <input type="number" name="stock" value="{{ old('stock', $producto->stock) }}" required 
                         class="w-full bg-rose-50/30 border border-rose-100 rounded-2xl p-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
                         placeholder="0">
                     @error('stock') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Stock Mínimo (Alerta)</label>
+                    <input type="number" name="stock_minimo" value="{{ old('stock_minimo', $producto->stock_minimo) }}" required 
+                        class="w-full bg-rose-50/30 border border-rose-100 rounded-2xl p-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
+                        placeholder="5">
+                    @error('stock_minimo') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="space-y-2">

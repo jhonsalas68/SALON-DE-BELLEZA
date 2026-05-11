@@ -10,9 +10,43 @@ use App\Traits\LogsActivity;
 class ProductoController extends Controller
 {
     use LogsActivity;
-    public function index()
+    public function index(Request $request)
     {
-        $productos = Producto::with('promotor')->latest()->get();
+        $query = Producto::with('promotor');
+
+        // Búsqueda por nombre o código
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nombre', 'LIKE', "%{$search}%")
+                  ->orWhere('codigo', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Filtro por estado de stock
+        if ($request->filled('stock_status')) {
+            if ($request->stock_status == 'critico') {
+                $query->whereColumn('stock', '<=', 'stock_minimo');
+            } elseif ($request->stock_status == 'bajo') {
+                $query->whereColumn('stock', '>', 'stock_minimo')
+                      ->where('stock', '<=', \DB::raw('stock_minimo + 5'));
+            }
+        }
+
+        // Filtro por próximos a vencer (30 días)
+        if ($request->filled('vencimiento') && $request->vencimiento == 'proximo') {
+            $query->whereNotNull('fecha_caducidad')
+                  ->where('fecha_caducidad', '<=', now()->addDays(30))
+                  ->where('fecha_caducidad', '>=', now());
+        }
+
+        $productos = $query->latest()->get();
+
+        // Registrar consulta en bitácora si hay parámetros
+        if ($request->anyFilled(['search', 'stock_status', 'vencimiento'])) {
+            $this->logActivity('QUERY', "Consulta de stock realizada", $request->all());
+        }
+
         return view('productos.index', compact('productos'));
     }
 
@@ -25,11 +59,13 @@ class ProductoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'codigo' => 'nullable|string|unique:productos,codigo',
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio_compra' => 'required|numeric|min:0',
             'precio_venta' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'stock_minimo' => 'required|integer|min:0',
             'fecha_caducidad' => 'nullable|date',
             'promotor_id' => 'nullable|exists:promotores,id',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -59,11 +95,13 @@ class ProductoController extends Controller
     public function update(Request $request, Producto $producto)
     {
         $request->validate([
+            'codigo' => "nullable|string|unique:productos,codigo,{$producto->id}",
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'precio_compra' => 'required|numeric|min:0',
             'precio_venta' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'stock_minimo' => 'required|integer|min:0',
             'fecha_caducidad' => 'nullable|date',
             'promotor_id' => 'nullable|exists:promotores,id',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
