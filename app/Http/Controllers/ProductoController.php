@@ -30,6 +30,7 @@ class ProductoController extends Controller
             'precio_compra' => 'required|numeric|min:0',
             'precio_venta' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'fecha_caducidad' => 'nullable|date',
             'promotor_id' => 'nullable|exists:promotores,id',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -63,6 +64,7 @@ class ProductoController extends Controller
             'precio_compra' => 'required|numeric|min:0',
             'precio_venta' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'fecha_caducidad' => 'nullable|date',
             'promotor_id' => 'nullable|exists:promotores,id',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);

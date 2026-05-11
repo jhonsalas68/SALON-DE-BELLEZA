@@ -16,6 +16,7 @@ class Producto extends Model
         'precio_venta',
         'imagen',
         'stock',
+        'fecha_caducidad',
         'promotor_id',
     ];
 

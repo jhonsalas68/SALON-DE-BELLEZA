@@ -24,6 +24,7 @@
             <thead>
                 <tr class="bg-rose-50/30">
                     <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50">Producto</th>
+                    <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50 text-center">Caducidad</th>
                     <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50 text-center">Disponibilidad</th>
                     @if(auth()->user()->hasPermission('manage_inventory'))
                     <th class="p-5 text-xs font-black text-rose-400 uppercase tracking-widest border-b border-rose-50">Costo (Compra)</th>
@@ -51,6 +52,15 @@
                                 <p class="text-[10px] text-gray-400 line-clamp-1 w-48 mt-0.5">{{ $producto->descripcion ?? 'Sin descripción' }}</p>
                             </div>
                         </div>
+                    </td>
+                    <td class="p-5 text-center">
+                        @if($producto->fecha_caducidad)
+                            <p class="text-xs font-bold @if(\Carbon\Carbon::parse($producto->fecha_caducidad)->isPast()) text-rose-500 @else text-gray-600 @endif">
+                                {{ \Carbon\Carbon::parse($producto->fecha_caducidad)->format('d/m/Y') }}
+                            </p>
+                        @else
+                            <p class="text-xs text-gray-300 italic">N/A</p>
+                        @endif
                     </td>
                     <td class="p-5 text-center">
                         @if($producto->stock > 0)

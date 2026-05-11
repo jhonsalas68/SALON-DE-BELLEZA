@@ -28,6 +28,8 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6|regex:/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/',
             'role_id' => 'required|exists:roles,id'
@@ -36,6 +38,9 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
+            'nombre' => $request->nombre,
+            'apellido' => $request->apellido,
+            'name' => $request->nombre . ' ' . $request->apellido,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role_id' => $request->role_id,
@@ -55,6 +60,8 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $rules = [
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
             'email' => "required|email|unique:users,email,{$user->id}",
             'role_id' => 'required|exists:roles,id'
         ];
@@ -70,6 +77,9 @@ class UserController extends Controller
         $oldData = $user->toArray();
         
         $user->update([
+            'nombre' => $request->nombre,
+            'apellido' => $request->apellido,
+            'name' => $request->nombre . ' ' . $request->apellido,
             'email' => $request->email,
             'role_id' => $request->role_id,
         ]);

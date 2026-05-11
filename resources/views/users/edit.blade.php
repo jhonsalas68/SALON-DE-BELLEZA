@@ -16,6 +16,28 @@
             @csrf
             @method('PUT')
             <div class="space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="nombre" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Nombre</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" name="nombre" id="nombre" value="{{ old('nombre', $user->nombre) }}" required
+                                class="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition duration-200 shadow-sm"
+                                placeholder="Nombre">
+                        </div>
+                        @error('nombre') <p class="text-red-500 text-xs mt-2 font-bold">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label for="apellido" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Apellido</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" name="apellido" id="apellido" value="{{ old('apellido', $user->apellido) }}" required
+                                class="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition duration-200 shadow-sm"
+                                placeholder="Apellido">
+                        </div>
+                        @error('apellido') <p class="text-red-500 text-xs mt-2 font-bold">{{ $message }}</p> @enderror
+                    </div>
+                </div>
                 <div>
                     <label for="email" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Correo Electrónico</label>
                     <div class="relative">

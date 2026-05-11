@@ -69,6 +69,13 @@
                     @error('stock') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
+                <div class="space-y-2">
+                    <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Fecha de Caducidad</label>
+                    <input type="date" name="fecha_caducidad" value="{{ old('fecha_caducidad') }}"
+                        class="w-full bg-rose-50/30 border border-rose-100 rounded-2xl p-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all">
+                    @error('fecha_caducidad') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
                 <div class="md:col-span-1 space-y-2">
                     <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Promotor / Proveedor</label>
                     <select name="promotor_id" 
