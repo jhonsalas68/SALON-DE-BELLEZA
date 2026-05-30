@@ -22,17 +22,26 @@ class LandingController extends Controller
 
     public function index()
     {
-        $servicios = Servicio::where('activo', true)->get();
-        $productos = Producto::where('stock', '>', 0)->get();
-        
-        $promociones = Promocion::where('activo', true)
-            ->whereDate('fecha_inicio', '<=', now())
-            ->whereDate('fecha_fin', '>=', now())
-            ->get();
+        $servicios = \Illuminate\Support\Facades\Cache::remember('landing_servicios', 60, function () {
+            return Servicio::where('activo', true)->get();
+        });
 
-        $estilistas = User::whereHas('role', function($q) {
-            $q->where('slug', 'estilista');
-        })->get();
+        $productos = \Illuminate\Support\Facades\Cache::remember('landing_productos', 60, function () {
+            return Producto::where('stock', '>', 0)->get();
+        });
+        
+        $promociones = \Illuminate\Support\Facades\Cache::remember('landing_promociones', 60, function () {
+            return Promocion::where('activo', true)
+                ->whereDate('fecha_inicio', '<=', now())
+                ->whereDate('fecha_fin', '>=', now())
+                ->get();
+        });
+
+        $estilistas = \Illuminate\Support\Facades\Cache::remember('landing_estilistas', 60, function () {
+            return User::whereHas('role', function($q) {
+                $q->where('slug', 'estilista');
+            })->get();
+        });
 
         $citas = collect();
         $compras = collect();
@@ -148,6 +157,15 @@ class LandingController extends Controller
             }
         }
 
+        // Cargar todas las citas del día para estos estilistas de una sola vez
+        $estilistasIds = $horarios->pluck('user_id')->unique()->toArray();
+        $todasCitas = Cita::with('servicio')
+            ->whereIn('estilista_id', $estilistasIds)
+            ->where('fecha', $fecha)
+            ->whereIn('estado', ['pendiente', 'confirmada', 'completada'])
+            ->get()
+            ->groupBy('estilista_id');
+
         // Buscar estilista disponible para ese bloque de tiempo
         foreach ($horarios as $h) {
             $hInicio = \Carbon\Carbon::createFromFormat('H:i:s', $h->hora_inicio);
@@ -162,10 +180,7 @@ class LandingController extends Controller
                     continue;
                 }
 
-                $citas = Cita::where('estilista_id', $h->user_id)
-                    ->where('fecha', $fecha)
-                    ->whereIn('estado', ['pendiente', 'confirmada', 'completada'])
-                    ->get();
+                $citas = $todasCitas->get($h->user_id, collect());
 
                 $overlap = false;
                 foreach ($citas as $c) {
@@ -348,6 +363,15 @@ class LandingController extends Controller
             return response()->json([]);
         }
 
+        // Cargar todas las citas del día para estos estilistas de una sola vez
+        $estilistasIds = $horarios->pluck('user_id')->unique()->toArray();
+        $todasCitas = Cita::with('servicio')
+            ->whereIn('estilista_id', $estilistasIds)
+            ->where('fecha', $fecha)
+            ->whereIn('estado', ['pendiente', 'confirmada', 'completada'])
+            ->get()
+            ->groupBy('estilista_id');
+
         $slots = [];
         $startTime = \Carbon\Carbon::createFromFormat('H:i:s', '08:00:00');
         $endTime = \Carbon\Carbon::createFromFormat('H:i:s', '20:00:00');
@@ -381,10 +405,7 @@ class LandingController extends Controller
                         continue;
                     }
 
-                    $citas = Cita::where('estilista_id', $h->user_id)
-                        ->where('fecha', $fecha)
-                        ->whereIn('estado', ['pendiente', 'confirmada', 'completada'])
-                        ->get();
+                    $citas = $todasCitas->get($h->user_id, collect());
 
                     $overlap = false;
                     foreach ($citas as $c) {
