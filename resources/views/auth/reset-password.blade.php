@@ -1,104 +1,83 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restablecer Contraseña - Anita Salon</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@200..800&display=swap');
+@extends('layouts.guest')
 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #faf8f6; }
+@section('title', 'Salón de Belleza Anita - Restablecer Contraseña')
 
-        .login-section {
-            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
-        }
-    </style>
-</head>
-<body class="text-gray-800">
+@section('content')
+    <section class="hero-gradient pt-36 pb-20 px-6 min-h-[80vh] flex items-center justify-center">
+        <div class="w-full max-w-md">
+            <div class="bg-white p-8 lg:p-12 rounded-[2.5rem] shadow-xl border border-stone-200/50 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-36 h-36 bg-rose-100/30 rounded-full blur-2xl"></div>
+                <div class="absolute -left-10 -top-10 w-36 h-36 bg-amber-100/30 rounded-full blur-2xl"></div>
 
-    <!-- Header -->
-    <header class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-rose-50 px-8 py-5 flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-rose-500 rounded-lg flex items-center justify-center">
-                <i class="fas fa-spa text-white text-sm"></i>
-            </div>
-            <span class="text-xl font-bold tracking-tighter">Anita<span class="text-rose-500">Salon</span></span>
-        </div>
-        <nav class="hidden lg:flex space-x-10 text-[11px] font-bold uppercase tracking-widest text-gray-400">
-            <a href="#inicio" class="hover:text-rose-500 transition">Inicio</a>
-            <a href="#nosotros" class="hover:text-rose-500 transition">Nosotros</a>
-            <a href="#servicios" class="hover:text-rose-500 transition">Tratamientos</a>
-            <a href="#contacto" class="hover:text-rose-500 transition">Contacto</a>
-        </nav>
-        <a href="#acceso" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition shadow-lg shadow-rose-100">
-            Reservaciones
-        </a>
-    </header>
-
-    <!-- Reset Section -->
-    <section id="acceso" class="min-h-screen pt-32 pb-20 px-6 max-w-2xl mx-auto flex flex-col items-center text-center">
-        <div class="bg-white p-8 lg:p-12 rounded-3xl shadow-2xl w-full max-w-md">
-            <div class="mb-6 text-center">
-                <div class="w-16 h-16 bg-rose-500 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-rose-100 mx-auto">
-                    <i class="fas fa-lock-open text-white text-2xl"></i>
-                </div>
-                <h2 class="text-2xl font-semibold mb-2">Restablecer tu contraseña</h2>
-                <p class="text-gray-600">
-                    Ingresa una nueva contraseña para tu cuenta.
-                </p>
-            </div>
-
-            @if (session('status'))
-                <div class="mb-4 bg-green-50 text-green-800 text-sm p-3 rounded-lg">
-                    {{ session('status') }}
-                </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="mb-4 bg-red-50 text-red-800 text-sm p-3 rounded-lg">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <form action="{{ route('password.update') }}" method="POST" class="space-y-4">
-                @csrf
-                <input type="hidden" name="token" value="{{ $token }}">
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-                    <input type="email" name="email" value="{{ old('email', request()->email) }}" readonly
-                           class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-not-allowed">
+                <div class="mb-8 text-center relative z-10">
+                    <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-rose-500 rounded-2xl flex items-center justify-center mb-4 shadow-md shadow-rose-100 mx-auto text-white">
+                        <i class="fas fa-lock-open text-xl"></i>
+                    </div>
+                    <h3 class="serif text-2xl lg:text-3xl text-stone-900 leading-tight">Restablecer Contraseña</h3>
+                    <p class="text-stone-500 text-xs mt-1">Ingresa tu nueva contraseña para acceder al sistema.</p>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
-                    <input type="password" name="password" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500">
+                @if (session('status'))
+                    <div class="bg-emerald-50 text-emerald-800 text-xs p-4 rounded-2xl mb-6 font-bold text-center border border-emerald-200">
+                        {{ session('status') }}
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="bg-rose-50 border border-rose-200 text-rose-800 text-xs p-4 rounded-2xl mb-6 font-bold text-center">
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form action="{{ route('password.update') }}" method="POST" class="space-y-4 relative z-10">
+                    @csrf
+                    <input type="hidden" name="token" value="{{ $token }}">
+
+                    <div class="space-y-1">
+                        <label for="email" class="text-[10px] font-black text-stone-400 uppercase tracking-widest pl-1">Correo Electrónico</label>
+                        <div class="relative">
+                            <input type="email" name="email" id="email" required value="{{ old('email', request()->email) }}" readonly
+                                   class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-stone-100 border border-stone-200 outline-none cursor-not-allowed text-sm font-semibold text-stone-500">
+                            <i class="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-stone-400"></i>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label for="password" class="text-[10px] font-black text-stone-400 uppercase tracking-widest pl-1">Nueva Contraseña</label>
+                        <div class="relative">
+                            <input type="password" name="password" id="password" required
+                                   placeholder="••••••••"
+                                   class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-stone-50 border border-stone-200 focus:border-amber-400 outline-none transition text-sm font-semibold text-stone-700">
+                            <i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-stone-400"></i>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label for="password_confirmation" class="text-[10px] font-black text-stone-400 uppercase tracking-widest pl-1">Confirmar Contraseña</label>
+                        <div class="relative">
+                            <input type="password" name="password_confirmation" id="password_confirmation" required
+                                   placeholder="••••••••"
+                                   class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-stone-50 border border-stone-200 focus:border-amber-400 outline-none transition text-sm font-semibold text-stone-700">
+                            <i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-stone-400"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-stone-900 hover:bg-amber-600 text-white font-extrabold py-3.5 rounded-2xl transition-all shadow-md text-xs mt-6">
+                        Restablecer Contraseña
+                    </button>
+                </form>
+
+                <div class="mt-8 text-center relative z-10">
+                    <p class="text-xs text-stone-500">
+                        ¿Recordaste tu contraseña? 
+                        <a href="{{ route('login') }}" class="text-amber-600 font-extrabold hover:underline ml-1">Inicia sesión</a>
+                    </p>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
-                    <input type="password" name="password_confirmation" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500">
-                </div>
-
-                <button type="submit"
-                        class="w-full bg-rose-500 text-white py-2 px-4 rounded-md hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-300 transition">
-                    Restablecer Contraseña
-                </button>
-            </form>
-
-            <div class="mt-6 text-sm text-gray-500">
-                ¿Recordaste tu contraseña? <a href="{{ route('login') }}" class="text-rose-600 hover:underline">Inicia sesión</a>
             </div>
         </div>
     </section>
-
-</body>
-</html>
+@endsection

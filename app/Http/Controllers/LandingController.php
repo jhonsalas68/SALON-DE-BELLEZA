@@ -116,7 +116,7 @@ class LandingController extends Controller
             5 => 'Viernes',
             6 => 'Sábado'
         ];
-        $dayOfWeekNumber = date('w', strtotime($fecha));
+        $dayOfWeekNumber = \Carbon\Carbon::parse($fecha)->dayOfWeek;
         $diaSemana = $diasSemana[$dayOfWeekNumber];
 
         // Obtener horarios activos de los estilistas para ese día
@@ -342,7 +342,7 @@ class LandingController extends Controller
             5 => 'Viernes',
             6 => 'Sábado'
         ];
-        $dayOfWeekNumber = date('w', strtotime($fecha));
+        $dayOfWeekNumber = \Carbon\Carbon::parse($fecha)->dayOfWeek;
         $diaSemana = $diasSemana[$dayOfWeekNumber];
 
         // Obtener horarios activos de los estilistas para ese día
@@ -438,6 +438,6 @@ class LandingController extends Controller
             $startTime->addMinutes(30);
         }
 
-        return response()->json($slots);
+        return response()->json($slots)->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 }

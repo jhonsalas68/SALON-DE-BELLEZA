@@ -173,14 +173,19 @@ class TestDataSeeder extends Seeder
         }
 
         // 5. Crear Horarios para Estilistas y Recepcionista
-        $dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
         foreach ($stylists as $stylist) {
-            foreach (array_slice($dias, 0, 4) as $dia) {
+            // Lunes a Viernes: 09:00 a 18:00
+            foreach (['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'] as $dia) {
                 Horario::updateOrCreate(
                     ['user_id' => $stylist->id, 'dia_semana' => $dia],
                     ['hora_inicio' => '09:00:00', 'hora_fin' => '18:00:00', 'activo' => true]
                 );
             }
+            // Sábado: 09:00 a 17:00
+            Horario::updateOrCreate(
+                ['user_id' => $stylist->id, 'dia_semana' => 'Sábado'],
+                ['hora_inicio' => '09:00:00', 'hora_fin' => '17:00:00', 'activo' => true]
+            );
         }
         foreach (['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'] as $dia) {
             Horario::updateOrCreate(
