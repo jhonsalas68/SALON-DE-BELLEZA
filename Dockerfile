@@ -1,57 +1,23 @@
-FROM php:8.2-apache
+FROM php:8.2-fpm-alpine
 
-# Set working directory
-WORKDIR /var/www/html
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
+# Instalar dependencias del sistema, herramientas de compilación para PostgreSQL y Node.js/npm
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
     curl \
     libpng-dev \
-    libonig-dev \
     libxml2-dev \
-    libpq-dev \
+    postgresql-dev \
     zip \
-    unzip
+    unzip \
+    nodejs \
+    npm
 
-# Install Node.js & npm (for Vite build)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+# Instalar extensiones de PHP (incluyendo pgsql, pdo_pgsql, opcache, exif y pcntl)
+RUN docker-php-ext-install pdo_mysql pdo_pgsql pgsql bcmath gd opcache exif pcntl
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions (Incluyendo OPcache para aceleración)
-RUN docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd opcache
-
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Copy the application
-COPY . /var/www/html
-
-# Install Composer dependencies (optimizing for production)
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-
-# Install NPM dependencies and build Vite assets
-RUN npm cache clean --force && npm install --network-timeout=1000000
-RUN npm run build
-
-# Set directory permissions for Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Change Apache document root to Laravel's public directory
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-
-# ==========================================
-# SUPER OPTIMIZACIÓN DE RENDIMIENTO
-# ==========================================
-
-# 1. Configurar OPcache para precompilar Laravel (Hace la app 10x más rápida)
-RUN echo "opcache.enable=1\n\
+# Configurar OPcache para optimización de velocidad en producción
+RUN echo -e "opcache.enable=1\n\
 opcache.memory_consumption=128\n\
 opcache.interned_strings_buffer=8\n\
 opcache.max_accelerated_files=10000\n\
@@ -59,24 +25,37 @@ opcache.revalidate_freq=0\n\
 opcache.validate_timestamps=0\n\
 opcache.save_comments=1" > /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 
-# 2. Optimizar Apache para la memoria RAM gratuita de Railway (evita bloqueos)
-RUN echo "<IfModule mpm_prefork_module>\n\
-    StartServers          1\n\
-    MinSpareServers       1\n\
-    MaxSpareServers       3\n\
-    MaxRequestWorkers     10\n\
-    MaxConnectionsPerChild 100\n\
-</IfModule>" > /etc/apache2/mods-available/mpm_prefork.conf
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Ensure only one MPM is loaded (prefork is required for mod_php)
-RUN a2dismod mpm_event mpm_worker || true
-RUN a2enmod mpm_prefork || true
+# Configurar directorio de trabajo
+WORKDIR /var/www
 
-# Enable Apache mod_rewrite for Laravel routing
-RUN a2enmod rewrite
+# Copiar el proyecto al contenedor
+COPY . .
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Instalar dependencias de Composer (optimizado para producción)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+# Instalar dependencias de Node y compilar recursos estáticos de Vite, luego limpiar node_modules
+RUN npm install && npm run build && rm -rf node_modules
+
+# Crear directorios necesarios para Nginx y configurar permisos correctos para Laravel
+RUN mkdir -p /run/nginx /var/log/nginx /var/lib/nginx \
+    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/log/nginx /var/lib/nginx /run/nginx \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# Copiar archivos de configuración de Nginx y Supervisor
+COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/supervisord.conf /etc/supervisord.conf
+
+# Copiar script de entrada (entrypoint) y dar permisos de ejecución
+COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Exponer el puerto
+EXPOSE 80
+
+# Usar el script de entrada y arrancar Supervisor
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
