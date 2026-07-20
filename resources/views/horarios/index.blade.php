@@ -79,38 +79,36 @@
                             @php 
                                 $horarioDelDia = $userHorarios->where('dia_semana', $diaKey)->first(); 
                             @endphp
-                            <td class="p-4 text-center">
-                                @if($horarioDelDia)
-                                    <div class="relative group inline-block">
-                                        <div class="px-3 py-2 rounded-xl {{ $horarioDelDia->activo ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-100 text-gray-500' }} text-xs shadow-sm">
-                                            <span class="block font-bold">
-                                                {{ \Carbon\Carbon::parse($horarioDelDia->hora_inicio)->format('H:i') }} - {{ \Carbon\Carbon::parse($horarioDelDia->hora_fin)->format('H:i') }}
-                                            </span>
-                                            @if(!$horarioDelDia->activo)
-                                            <span class="text-[8px] uppercase tracking-wider font-extrabold block">Inactivo</span>
-                                            @endif
-                                        </div>
-                                        
-                                        @if(auth()->user()->hasPermission('manage_schedules'))
-                                        <!-- Mini menú de acciones rápidas al pasar el cursor -->
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover:flex items-center gap-1 bg-gray-900 p-1.5 rounded-lg shadow-lg z-10">
-                                            <a href="{{ route('horarios.edit', $horarioDelDia->id) }}" class="w-6 h-6 bg-blue-500 text-white rounded flex items-center justify-center text-[10px] hover:bg-blue-650 transition-colors" title="Editar">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('horarios.destroy', $horarioDelDia->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar horario de este día?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="w-6 h-6 bg-rose-500 text-white rounded flex items-center justify-center text-[10px] hover:bg-rose-650 transition-colors" title="Eliminar">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                    <td class="p-4 text-center">
+                                        @if($horarioDelDia)
+                                            <div class="px-3 py-2.5 rounded-2xl {{ $horarioDelDia->activo ? 'bg-emerald-50 text-emerald-800 border border-emerald-100 shadow-sm' : 'bg-gray-100 text-gray-500' }} text-xs inline-block min-w-[120px]">
+                                                <span class="block font-black text-xs tracking-tight">
+                                                    {{ \Carbon\Carbon::parse($horarioDelDia->hora_inicio)->format('H:i') }} - {{ \Carbon\Carbon::parse($horarioDelDia->hora_fin)->format('H:i') }}
+                                                </span>
+                                                @if(!$horarioDelDia->activo)
+                                                <span class="text-[8px] uppercase tracking-wider font-extrabold block text-gray-400">Inactivo</span>
+                                                @endif
+                                                
+                                                @if(auth()->user()->hasPermission('manage_schedules'))
+                                                <div class="flex items-center justify-center gap-1.5 mt-2 pt-1.5 border-t border-emerald-200/40">
+                                                    <a href="{{ route('horarios.edit', $horarioDelDia->id) }}" class="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-[10px] font-bold transition-all shadow-sm flex items-center gap-1" title="Editar este horario">
+                                                        <i class="fas fa-edit"></i>
+                                                        <span>Editar</span>
+                                                    </a>
+                                                    <form action="{{ route('horarios.destroy', $horarioDelDia->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar horario de este día?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="px-2 py-1 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-[10px] font-bold transition-all shadow-sm flex items-center gap-1" title="Eliminar este horario">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-400 font-bold bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-xl">Libre</span>
                                         @endif
-                                    </div>
-                                @else
-                                    <span class="text-xs text-gray-400 font-bold bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-xl">Libre</span>
-                                @endif
-                            </td>
+                                    </td>
                         @endforeach
                     </tr>
                     @endif
