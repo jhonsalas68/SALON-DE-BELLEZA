@@ -14,9 +14,12 @@ class ServicioController extends Controller
         $query = Servicio::query();
 
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where('nombre', 'LIKE', "%{$search}%")
-                  ->orWhere('descripcion', 'LIKE', "%{$search}%");
+            $search = trim($request->search);
+            $searchLower = mb_strtolower($search, 'UTF-8');
+            $query->where(function($q) use ($searchLower) {
+                $q->whereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(descripcion) LIKE ?', ["%{$searchLower}%"]);
+            });
         }
 
         $servicios = $query->get();

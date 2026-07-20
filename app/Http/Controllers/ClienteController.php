@@ -21,10 +21,11 @@ class ClienteController extends Controller
 
         // Aplicar filtro de búsqueda si existe
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+            $search = trim($request->search);
+            $searchLower = mb_strtolower($search, 'UTF-8');
+            $query->where(function($q) use ($searchLower) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(email) LIKE ?', ["%{$searchLower}%"]);
             });
         }
 

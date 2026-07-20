@@ -30,16 +30,17 @@ class CitaController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->whereHas('cliente', function($qc) use ($search) {
-                    $qc->where('name', 'LIKE', "%{$search}%")
-                       ->orWhere('nombre', 'LIKE', "%{$search}%");
-                })->orWhereHas('estilista', function($qe) use ($search) {
-                    $qe->where('name', 'LIKE', "%{$search}%")
-                       ->orWhere('nombre', 'LIKE', "%{$search}%");
-                })->orWhereHas('servicio', function($qs) use ($search) {
-                    $qs->where('nombre', 'LIKE', "%{$search}%");
+            $search = trim($request->search);
+            $searchLower = mb_strtolower($search, 'UTF-8');
+            $query->where(function($q) use ($searchLower) {
+                $q->whereHas('cliente', function($qc) use ($searchLower) {
+                    $qc->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
+                       ->orWhereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"]);
+                })->orWhereHas('estilista', function($qe) use ($searchLower) {
+                    $qe->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
+                       ->orWhereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"]);
+                })->orWhereHas('servicio', function($qs) use ($searchLower) {
+                    $qs->whereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"]);
                 });
             });
         }

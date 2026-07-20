@@ -23,11 +23,12 @@ class VentaController extends Controller
         $query = Venta::with(['cliente', 'vendedor']);
 
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('cliente_nombre', 'LIKE', "%{$search}%")
-                  ->orWhereHas('cliente', function($qc) use ($search) {
-                      $qc->where('name', 'LIKE', "%{$search}%");
+            $search = trim($request->search);
+            $searchLower = mb_strtolower($search, 'UTF-8');
+            $query->where(function($q) use ($searchLower) {
+                $q->whereRaw('LOWER(cliente_nombre) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereHas('cliente', function($qc) use ($searchLower) {
+                      $qc->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"]);
                   });
             });
         }

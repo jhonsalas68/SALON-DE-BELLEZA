@@ -14,12 +14,14 @@ class ProductoController extends Controller
     {
         $query = Producto::with('promotor');
 
-        // Búsqueda por nombre o código
+        // Búsqueda insensible a mayúsculas/minúsculas por nombre, código o descripción
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('nombre', 'LIKE', "%{$search}%")
-                  ->orWhere('codigo', 'LIKE', "%{$search}%");
+            $search = trim($request->search);
+            $searchLower = mb_strtolower($search, 'UTF-8');
+            $query->where(function($q) use ($searchLower) {
+                $q->whereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(codigo) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(descripcion) LIKE ?', ["%{$searchLower}%"]);
             });
         }
 
