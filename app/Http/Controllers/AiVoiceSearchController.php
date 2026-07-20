@@ -33,7 +33,7 @@ class AiVoiceSearchController extends Controller
                         'target_module' => 'seguridad',
                         'redirect_url' => '#',
                         'extracted_search' => $userQuery,
-                        'ai_summary' => "Por razones de seguridad, las búsquedas por voz con IA están restringidas exclusivamente a consultas de lectura (READ-ONLY). No se permiten modificaciones de datos."
+                        'ai_summary' => "Por razones de seguridad, las búsquedas por voz con IA están restringidas exclusivamente a consultas de lectura (READ-ONLY)."
                     ]
                 ]);
             }
@@ -43,26 +43,28 @@ class AiVoiceSearchController extends Controller
         if (!empty($apiKey)) {
             $modelsToTry = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
             $systemPrompt = <<<PROMPT
-Eres el Asistente IA de Búsqueda del sistema del Salón de Belleza ("Salón Anita").
-Tu función es interpretar comandos de voz en lenguaje natural en español y traducirlos ÚNICAMENTE a filtros y consultas de LECTURA (READ-ONLY).
+Eres el Asistente de Voz Inteligente del Salón de Belleza ("Salón Anita").
+Tu objetivo es traducir comandos hablados en español a URLs de consulta y filtrado READ-ONLY.
 
-MÓDULOS DISPONIBLES EN EL SISTEMA:
-1. `productos`: Catálogo e inventario. Ejemplo: `/productos?search=shampoo` o `/productos?stock=bajo`
-2. `servicios`: Servicios de salón. Ejemplo: `/servicios?search=corte`
-3. `citas`: Agenda de citas. Ejemplo: `/citas?search=Maria` o `/citas?estado=completada`
-4. `ventas`: Historial de ventas. Ejemplo: `/ventas?search=Maria`
-5. `clientes`: Directorio de clientes. Ejemplo: `/clientes?search=Juan`
-6. `comisiones`: Comisiones de estilistas. Ejemplo: `/comisiones`
-7. `alertas`: Alertas de inventario. Ejemplo: `/alertas`
-8. `reportes`: Reportes administrativos. Ejemplo: `/reportes?rango=mes`
+REGLAS DE RUTAS Y FILTROS:
+- "stock bajo", "estado de stock bajo", "poco stock", "critico" -> `/productos?stock_status=bajo`
+- "productos vencidos", "proximos a vencer" -> `/productos?vencimiento=proximo`
+- "acondicionador", "shampoo", "nombre de producto" -> `/productos?search=NOMBRE`
+- "citas completadas", "citas pendientes" -> `/citas?estado=ESTADO`
+- "citas de X", "agenda" -> `/citas?search=BUSQUEDA`
+- "reportes", "estadisticas", "ingresos" -> `/reportes`
+- "caja", "caja chica", "arqueo" -> `/cajas`
+- "valoraciones", "encuestas", "estrellas" -> `/valoraciones`
+- "clientes", "directorio" -> `/clientes?search=BUSQUEDA`
+- "ventas", "facturas" -> `/ventas?search=BUSQUEDA`
 
-DEBES RESPONDER EXCLUSIVAMENTE EN FORMATO JSON VÁLIDO SIN MARKDOWN:
+Responde EXCLUSIVAMENTE en JSON puro sin bloques de código:
 {
     "is_safe": true,
-    "target_module": "nombre_del_modulo",
+    "target_module": "nombre_modulo",
     "redirect_url": "/ruta_con_parametros",
-    "extracted_search": "termino_clave",
-    "ai_summary": "Explicación breve en español"
+    "extracted_search": "termino",
+    "ai_summary": "Explicacion en español"
 }
 PROMPT;
 
@@ -70,7 +72,7 @@ PROMPT;
                 try {
                     $response = Http::withHeaders([
                         'Content-Type' => 'application/json',
-                    ])->timeout(8)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
+                    ])->timeout(6)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
                         'contents' => [
                             [
                                 'parts' => [
@@ -112,7 +114,7 @@ PROMPT;
             }
         }
 
-        // 3. Parser Inteligente Local Híbrido (Respaldo Inmediato si Gemini excede cuota o falla la API)
+        // 3. Motor Inteligente de Respaldo Híbrido Avanzado
         $aiResult = $this->localIntelligentSearch($userQuery, $lowerQuery);
 
         if (auth()->check()) {
@@ -130,18 +132,72 @@ PROMPT;
     }
 
     /**
-     * Motor inteligente local de respaldo para interpretar consultas sin depender exclusivamente de cuotas externas.
+     * Motor de interpretación local avanzado para procesar consultas habladas sin fallos.
      */
     private function localIntelligentSearch(string $originalQuery, string $lowerQuery): array
     {
-        // Palabras de módulos
+        // 1. Filtros Específicos de Stock y Productos
+        if (str_contains($lowerQuery, 'stock bajo') || str_contains($lowerQuery, 'estado de stock') || str_contains($lowerQuery, 'poco stock') || str_contains($lowerQuery, 'agotad') || str_contains($lowerQuery, 'critico')) {
+            return [
+                'is_safe' => true,
+                'target_module' => 'productos',
+                'redirect_url' => route('productos.index', ['stock_status' => 'bajo']),
+                'extracted_search' => 'stock_bajo',
+                'ai_summary' => "Filtrando catálogo por productos en estado de stock bajo o crítico."
+            ];
+        }
+
+        if (str_contains($lowerQuery, 'vencid') || str_contains($lowerQuery, 'proximo a vencer') || str_contains($lowerQuery, 'caducad')) {
+            return [
+                'is_safe' => true,
+                'target_module' => 'productos',
+                'redirect_url' => route('productos.index', ['vencimiento' => 'proximo']),
+                'extracted_search' => 'proximo_vencer',
+                'ai_summary' => "Filtrando productos próximos a vencer."
+            ];
+        }
+
+        // 2. Reportes Administrativos
+        if (str_contains($lowerQuery, 'reporte') || str_contains($lowerQuery, 'estadistica') || str_contains($lowerQuery, 'resumen ejecutivo') || str_contains($lowerQuery, 'ingreso')) {
+            return [
+                'is_safe' => true,
+                'target_module' => 'reportes',
+                'redirect_url' => route('reportes.index'),
+                'extracted_search' => 'reportes',
+                'ai_summary' => "Generando reporte ejecutivo del salón."
+            ];
+        }
+
+        // 3. Arqueo y Caja Chica
+        if (str_contains($lowerQuery, 'caja') || str_contains($lowerQuery, 'arqueo') || str_contains($lowerQuery, 'gasto')) {
+            return [
+                'is_safe' => true,
+                'target_module' => 'cajas',
+                'redirect_url' => route('cajas.index'),
+                'extracted_search' => 'cajas',
+                'ai_summary' => "Consultando el módulo de caja chica y arqueos diarios."
+            ];
+        }
+
+        // 4. Valoraciones y NPS
+        if (str_contains($lowerQuery, 'valoracio') || str_contains($lowerQuery, 'califica') || str_contains($lowerQuery, 'nps') || str_contains($lowerQuery, 'estrella')) {
+            return [
+                'is_safe' => true,
+                'target_module' => 'valoraciones',
+                'redirect_url' => route('valoraciones.index'),
+                'extracted_search' => 'valoraciones',
+                'ai_summary' => "Consultando las valoraciones y calificaciones del personal."
+            ];
+        }
+
+        // 5. Citas y Agenda
         if (str_contains($lowerQuery, 'cita') || str_contains($lowerQuery, 'agenda') || str_contains($lowerQuery, 'reserva')) {
             $estado = null;
             if (str_contains($lowerQuery, 'completad')) $estado = 'completada';
             elseif (str_contains($lowerQuery, 'pendiente')) $estado = 'pendiente';
             elseif (str_contains($lowerQuery, 'confirmad')) $estado = 'confirmada';
 
-            $cleanTerm = trim(str_replace(['citas', 'cita', 'agenda', 'reservas', 'reserva', 'completadas', 'pendientes', 'de'], '', $lowerQuery));
+            $cleanTerm = $this->cleanFillerWords($lowerQuery, ['citas', 'cita', 'agenda', 'reservas', 'reserva', 'completadas', 'pendientes', 'confirmadas']);
 
             if ($estado) {
                 return [
@@ -158,23 +214,25 @@ PROMPT;
                 'target_module' => 'citas',
                 'redirect_url' => route('citas.index', ['search' => $cleanTerm ?: $originalQuery]),
                 'extracted_search' => $cleanTerm ?: $originalQuery,
-                'ai_summary' => "Filtrando citas para '" . ($cleanTerm ?: $originalQuery) . "'."
+                'ai_summary' => "Filtrando agenda de citas para '" . ($cleanTerm ?: $originalQuery) . "'."
             ];
         }
 
+        // 6. Clientes
         if (str_contains($lowerQuery, 'cliente') || str_contains($lowerQuery, 'directorio')) {
-            $cleanTerm = trim(str_replace(['clientes', 'cliente', 'directorio', 'buscar', 'llamados', 'llamada'], '', $lowerQuery));
+            $cleanTerm = $this->cleanFillerWords($lowerQuery, ['clientes', 'cliente', 'directorio', 'llamados', 'llamada']);
             return [
                 'is_safe' => true,
                 'target_module' => 'clientes',
                 'redirect_url' => route('clientes.index', ['search' => $cleanTerm ?: $originalQuery]),
                 'extracted_search' => $cleanTerm ?: $originalQuery,
-                'ai_summary' => "Buscando cliente '" . ($cleanTerm ?: $originalQuery) . "' en el directorio."
+                'ai_summary' => "Buscando cliente '" . ($cleanTerm ?: $originalQuery) . "'."
             ];
         }
 
+        // 7. Ventas
         if (str_contains($lowerQuery, 'venta') || str_contains($lowerQuery, 'factura') || str_contains($lowerQuery, 'cobro')) {
-            $cleanTerm = trim(str_replace(['ventas', 'venta', 'facturas', 'factura', 'cobros', 'buscar'], '', $lowerQuery));
+            $cleanTerm = $this->cleanFillerWords($lowerQuery, ['ventas', 'venta', 'facturas', 'factura', 'cobros']);
             return [
                 'is_safe' => true,
                 'target_module' => 'ventas',
@@ -184,59 +242,20 @@ PROMPT;
             ];
         }
 
-        if (str_contains($lowerQuery, 'comision') || str_contains($lowerQuery, 'pago estilista')) {
-            return [
-                'is_safe' => true,
-                'target_module' => 'comisiones',
-                'redirect_url' => route('comisiones.index'),
-                'extracted_search' => 'comisiones',
-                'ai_summary' => "Consultando panel de comisiones de estilistas."
-            ];
-        }
-
-        if (str_contains($lowerQuery, 'alerta') || str_contains($lowerQuery, 'stock bajo') || str_contains($lowerQuery, 'critico')) {
-            return [
-                'is_safe' => true,
-                'target_module' => 'alertas',
-                'redirect_url' => route('alertas.index'),
-                'extracted_search' => 'stock_bajo',
-                'ai_summary' => "Consultando centro de alertas de stock mínimo de productos."
-            ];
-        }
-
-        if (str_contains($lowerQuery, 'reporte') || str_contains($lowerQuery, 'estadistica') || str_contains($lowerQuery, 'ingreso')) {
-            return [
-                'is_safe' => true,
-                'target_module' => 'reportes',
-                'redirect_url' => route('reportes.index'),
-                'extracted_search' => 'reportes',
-                'ai_summary' => "Generando reporte ejecutivo de ingresos y servicios."
-            ];
-        }
-
-        if (str_contains($lowerQuery, 'caja') || str_contains($lowerQuery, 'arqueo') || str_contains($lowerQuery, 'gastos')) {
-            return [
-                'is_safe' => true,
-                'target_module' => 'cajas',
-                'redirect_url' => route('cajas.index'),
-                'extracted_search' => 'cajas',
-                'ai_summary' => "Consultando módulo de caja chica y arqueo diario."
-            ];
-        }
-
+        // 8. Servicios
         if (str_contains($lowerQuery, 'servicio') || str_contains($lowerQuery, 'corte') || str_contains($lowerQuery, 'manicura') || str_contains($lowerQuery, 'tinte') || str_contains($lowerQuery, 'peinado')) {
-            $cleanTerm = trim(str_replace(['servicios', 'servicio', 'buscar'], '', $lowerQuery));
+            $cleanTerm = $this->cleanFillerWords($lowerQuery, ['servicios', 'servicio']);
             return [
                 'is_safe' => true,
                 'target_module' => 'servicios',
                 'redirect_url' => route('servicios.index', ['search' => $cleanTerm ?: $originalQuery]),
                 'extracted_search' => $cleanTerm ?: $originalQuery,
-                'ai_summary' => "Buscando servicio de salón '" . ($cleanTerm ?: $originalQuery) . "'."
+                'ai_summary' => "Buscando servicio '" . ($cleanTerm ?: $originalQuery) . "'."
             ];
         }
 
-        // Predeterminado: Búsqueda en catálogo de productos
-        $cleanTerm = trim(str_replace(['buscar', 'productos', 'producto', 'con'], '', $lowerQuery));
+        // 9. Predeterminado: Catálogo de Productos
+        $cleanTerm = $this->cleanFillerWords($lowerQuery, ['productos', 'producto', 'catalogo']);
         return [
             'is_safe' => true,
             'target_module' => 'productos',
@@ -244,5 +263,23 @@ PROMPT;
             'extracted_search' => $cleanTerm ?: $originalQuery,
             'ai_summary' => "Buscando en el catálogo de productos por '" . ($cleanTerm ?: $originalQuery) . "'."
         ];
+    }
+
+    /**
+     * Limpia palabras de relleno en español para obtener el término de búsqueda exacto.
+     */
+    private function cleanFillerWords(string $query, array $keywordsToRemove = []): string
+    {
+        $fillers = array_merge([
+            'buscar', 'buscame', 'muestrame', 'muestra', 'ver', 'dame', 'quiero', 'por favor',
+            'de', 'del', 'los', 'las', 'el', 'la', 'un', 'una', 'con', 'en', 'estado', 'de'
+        ], $keywordsToRemove);
+
+        $words = explode(' ', $query);
+        $filteredWords = array_filter($words, function ($w) use ($fillers) {
+            return !in_array(trim($w), $fillers) && strlen(trim($w)) > 1;
+        });
+
+        return trim(implode(' ', $filteredWords));
     }
 }
