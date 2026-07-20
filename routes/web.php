@@ -130,6 +130,25 @@ Route::middleware(['auth'])->group(function () {
         Route::post('alertas/leer-todas', [\App\Http\Controllers\AlertaController::class, 'marcarTodasLeidas'])->name('alertas.leer-todas');
     });
 
+    // Reportes Administrativos (CU20)
+    Route::middleware(['permission:view_reports'])->group(function () {
+        Route::get('reportes', [\App\Http\Controllers\ReporteController::class, 'index'])->name('reportes.index');
+        Route::get('reportes/imprimir', [\App\Http\Controllers\ReporteController::class, 'imprimir'])->name('reportes.imprimir');
+    });
+
+    // Buscador por Voz con Gemini AI
+    Route::post('/ai/voice-search', [\App\Http\Controllers\AiVoiceSearchController::class, 'processVoice'])->name('ai.voice-search');
+
+    // Arqueo y Cierre de Caja Chica (Opción 4)
+    Route::get('cajas', [\App\Http\Controllers\CajaController::class, 'index'])->name('cajas.index');
+    Route::post('cajas/abrir', [\App\Http\Controllers\CajaController::class, 'abrir'])->name('cajas.abrir');
+    Route::post('cajas/{caja}/cerrar', [\App\Http\Controllers\CajaController::class, 'cerrar'])->name('cajas.cerrar');
+    Route::post('cajas/{caja}/movimiento', [\App\Http\Controllers\CajaController::class, 'storeMovimiento'])->name('cajas.movimiento');
+
+    // Encuestas de Satisfacción y Valoraciones NPS (Opción 5)
+    Route::get('valoraciones', [\App\Http\Controllers\ValoracionController::class, 'index'])->name('valoraciones.index');
+    Route::post('valoraciones', [\App\Http\Controllers\ValoracionController::class, 'store'])->name('valoraciones.store');
+
     // Rutas exclusivas para el portal de clientes (Landing)
     Route::post('/client/appointments', [\App\Http\Controllers\LandingController::class, 'agendarCita'])->name('client.appointments.store');
     Route::post('/client/buy', [\App\Http\Controllers\LandingController::class, 'comprarProducto'])->name('client.products.buy');

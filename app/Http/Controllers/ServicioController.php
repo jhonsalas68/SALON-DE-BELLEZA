@@ -9,9 +9,17 @@ use App\Traits\LogsActivity;
 class ServicioController extends Controller
 {
     use LogsActivity;
-    public function index()
+    public function index(Request $request)
     {
-        $servicios = Servicio::all();
+        $query = Servicio::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('nombre', 'LIKE', "%{$search}%")
+                  ->orWhere('descripcion', 'LIKE', "%{$search}%");
+        }
+
+        $servicios = $query->get();
         return view('servicios.index', compact('servicios'));
     }
 

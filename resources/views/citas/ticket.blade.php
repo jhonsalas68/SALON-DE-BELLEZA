@@ -162,7 +162,32 @@
     <div class="footer text-center">
         <p>¡Gracias por su visita!</p>
         <p>Conserve su boleta para reclamos.</p>
-        <p>Desarrollado por Antigravity</p>
+        <p>Desarrollado por Salon Anita</p>
+    </div>
+
+    @php
+        $valoracionExistente = \App\Models\Valoracion::where('cita_id', $cita->id)->first();
+    @endphp
+
+    <div class="no-print" style="margin-top: 20px; padding: 12px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; font-family: sans-serif;">
+        <h4 style="margin: 0 0 8px 0; font-size: 13px; text-align: center; color: #be123c;">¿Qué tal fue tu experiencia? (Calificación NPS)</h4>
+        @if($valoracionExistente)
+            <div style="text-align: center; color: #047857; font-weight: bold; font-size: 12px;">
+                ✓ ¡Ya calificaste este servicio con {{ $valoracionExistente->estrellas }} ★!
+            </div>
+        @else
+            <form action="{{ route('valoraciones.store') }}" method="POST" style="text-align: center;">
+                @csrf
+                <input type="hidden" name="cita_id" value="{{ $cita->id }}">
+                <div style="margin-bottom: 8px; font-size: 12px; font-weight: bold; color: #d97706;">
+                    <label style="cursor: pointer;"><input type="radio" name="estrellas" value="5" checked> ★★★★★ (5)</label>
+                    <label style="cursor: pointer; margin-left: 8px;"><input type="radio" name="estrellas" value="4"> ★★★★ (4)</label>
+                    <label style="cursor: pointer; margin-left: 8px;"><input type="radio" name="estrellas" value="3"> ★★★ (3)</label>
+                </div>
+                <input type="text" name="comentario" placeholder="Dejar un comentario opcional..." style="width: 90%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px; margin-bottom: 8px;">
+                <button type="submit" style="width: 95%; padding: 6px; background-color: #e11d48; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Enviar Opinión</button>
+            </form>
+        @endif
     </div>
 
 </body>

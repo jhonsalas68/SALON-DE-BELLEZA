@@ -27,6 +27,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'comision_porcentaje',
+        'puntos',
     ];
 
     /**
@@ -90,5 +91,20 @@ class User extends Authenticatable
     public function comisiones(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Comision::class, 'estilista_id');
+    }
+
+    public function citas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Cita::class, 'estilista_id');
+    }
+
+    public function puntosHistorial(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PuntosHistorial::class);
+    }
+
+    public function valoracionesRecibidas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Valoracion::class, 'estilista_id');
     }
 }

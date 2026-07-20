@@ -18,11 +18,23 @@ class VentaController extends Controller
 {
     use LogsActivity;
 
-    public function index()
+    public function index(Request $request)
     {
-        $ventas = Venta::with(['cliente', 'vendedor'])
-            ->orderBy('fecha_venta', 'desc')
-            ->paginate(15);
+        $query = Venta::with(['cliente', 'vendedor']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('cliente_nombre', 'LIKE', "%{$search}%")
+                  ->orWhereHas('cliente', function($qc) use ($search) {
+                      $qc->where('name', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        $ventas = $query->orderBy('fecha_venta', 'desc')
+            ->paginate(15)
+            ->withQueryString();
             
         return view('ventas.index', compact('ventas'));
     }
@@ -142,8 +154,26 @@ class VentaController extends Controller
             // Update main sale values
             $venta->subtotal = $subtotalAcumulado;
             $venta->descuento = $descuentoAcumulado;
-            $venta->total = $subtotalAcumulado - $descuentoAcumulado;
+            $venta->total = max(0, $subtotalAcumulado - $descuentoAcumulado);
             $venta->save();
+
+            // Ocurrencia de puntos de lealtad (Opción 2)
+            if ($venta->cliente_id && $venta->estado_pago === 'completado') {
+                $puntosGanados = (int) floor($venta->total / 10);
+                if ($puntosGanados > 0) {
+                    $cliente = User::find($venta->cliente_id);
+                    if ($cliente) {
+                        $cliente->increment('puntos', $puntosGanados);
+                        PuntosHistorial::create([
+                            'user_id' => $cliente->id,
+                            'puntos' => $puntosGanados,
+                            'tipo' => 'ganado',
+                            'descripcion' => "Ganado por compra de productos (Venta ID: {$venta->id})",
+                            'venta_id' => $venta->id
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
 

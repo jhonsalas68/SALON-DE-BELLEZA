@@ -44,7 +44,7 @@ class PromocionController extends Controller
         $data = $request->all();
         $data['activo'] = $request->has('activo');
 
-        // Can't assign both at once to keep it simple, or can do either
+        
         if ($request->filled('servicio_id') && $request->filled('producto_id')) {
             return back()->withInput()->with('error', 'Una promoción debe ser para un Servicio O para un Producto, no para ambos a la vez.');
         }

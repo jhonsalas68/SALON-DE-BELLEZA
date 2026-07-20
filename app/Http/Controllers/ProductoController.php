@@ -24,12 +24,10 @@ class ProductoController extends Controller
         }
 
         // Filtro por estado de stock
-        if ($request->filled('stock_status')) {
-            if ($request->stock_status == 'critico') {
+        if ($request->filled('stock_status') || $request->filled('stock')) {
+            $stockParam = $request->stock_status ?? $request->stock;
+            if ($stockParam == 'critico' || $stockParam == 'bajo') {
                 $query->whereColumn('stock', '<=', 'stock_minimo');
-            } elseif ($request->stock_status == 'bajo') {
-                $query->whereColumn('stock', '>', 'stock_minimo')
-                      ->where('stock', '<=', DB::raw('stock_minimo + 5'));
             }
         }
 

@@ -181,6 +181,25 @@
                 </a>
                 @endif
 
+                @if(auth()->user()->hasPermission('view_reports'))
+                <a href="{{ route('reportes.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+                    <i class="fas fa-chart-line w-5 text-center"></i>
+                    <span class="text-sm">Reportes</span>
+                </a>
+                @endif
+
+                @if(auth()->user()->hasPermission('manage_sales'))
+                <a href="{{ route('cajas.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('cajas.*') ? 'active' : '' }}">
+                    <i class="fas fa-box-archive w-5 text-center"></i>
+                    <span class="text-sm">Caja Chica</span>
+                </a>
+                @endif
+
+                <a href="{{ route('valoraciones.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('valoraciones.*') ? 'active' : '' }}">
+                    <i class="fas fa-star w-5 text-center"></i>
+                    <span class="text-sm">Valoraciones NPS</span>
+                </a>
+
                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-8 mb-3 px-2">Mi Cuenta</p>
                 <a href="{{ route('profile.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('profile.*') ? 'active' : '' }}">
                     <i class="fas fa-cog w-5 text-center"></i>
@@ -213,16 +232,25 @@
     <!-- Wrapper Principal del Contenido -->
     <div class="flex-1 flex flex-col min-w-0 bg-[#f8fafc] lg:ml-72 h-screen transition-all duration-300">
         
-        <!-- Mobile Header (Visible solo en pantallas pequeñas) -->
-        <header class="lg:hidden sticky top-0 z-30 flex items-center justify-between bg-white/80 backdrop-blur-md px-6 py-4 border-b border-gray-200 shadow-sm shrink-0">
+        <!-- Topbar Global con Buscador Inteligente por Voz Gemini AI -->
+        <header class="bg-white/90 backdrop-blur-md px-6 py-3.5 border-b border-gray-100 flex items-center justify-between sticky top-0 z-30 shadow-sm shrink-0">
             <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-gradient-to-br from-rose-400 to-rose-600 rounded-lg flex items-center justify-center shadow-sm">
-                    <i class="fas fa-spa text-white text-[10px]"></i>
+                <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-rose-500 bg-gray-100 hover:bg-rose-50 w-9 h-9 rounded-xl flex items-center justify-center transition-colors">
+                    <i class="fas fa-bars text-base"></i>
+                </button>
+                <div class="hidden sm:block">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Sistema de Gestión</p>
+                    <p class="text-xs font-black text-gray-800">Salón Anita</p>
                 </div>
-                <h1 class="text-lg font-extrabold text-gray-900 tracking-tight">Salon Anita</h1>
             </div>
-            <button onclick="toggleSidebar()" class="text-gray-500 hover:text-rose-500 focus:outline-none bg-gray-100 hover:bg-rose-50 w-10 h-10 rounded-xl flex items-center justify-center transition-colors">
-                <i class="fas fa-bars text-lg"></i>
+
+            <!-- Botón del Buscador Inteligente por Voz con ícono de micrófono destacado -->
+            <button onclick="openVoiceModal()" class="px-4 py-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-2xl shadow-md shadow-rose-200 transition-all duration-200 flex items-center space-x-2.5 transform hover:scale-[1.02] active:scale-95 focus:outline-none">
+                <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                    <i class="fas fa-microphone text-white text-xs animate-pulse"></i>
+                </div>
+                <span class="text-xs font-black tracking-wide">Buscar por Voz</span>
+                <span class="bg-white/20 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase hidden md:inline-block">Gemini IA</span>
             </button>
         </header>
 
@@ -341,6 +369,8 @@
             }
         });
     </script>
+
+    @include('components.ai-voice-search-modal')
 
     @yield('scripts')
 </body>

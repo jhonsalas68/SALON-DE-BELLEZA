@@ -15,24 +15,39 @@ class CitaController extends Controller
 {
     use LogsActivity;
 
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         
-        // Si es estilista, solo ve sus citas
+        $query = Cita::with(['cliente', 'estilista', 'servicio']);
+
         if ($user->hasRole('estilista')) {
-            $citas = Cita::with(['cliente', 'servicio'])
-                ->where('estilista_id', $user->id)
-                ->orderBy('fecha', 'desc')
-                ->orderBy('hora', 'desc')
-                ->paginate(15);
-        } else {
-            // Recepcionista o Admin ven todas
-            $citas = Cita::with(['cliente', 'estilista', 'servicio'])
-                ->orderBy('fecha', 'desc')
-                ->orderBy('hora', 'desc')
-                ->paginate(15);
+            $query->where('estilista_id', $user->id);
         }
+
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('cliente', function($qc) use ($search) {
+                    $qc->where('name', 'LIKE', "%{$search}%")
+                       ->orWhere('nombre', 'LIKE', "%{$search}%");
+                })->orWhereHas('estilista', function($qe) use ($search) {
+                    $qe->where('name', 'LIKE', "%{$search}%")
+                       ->orWhere('nombre', 'LIKE', "%{$search}%");
+                })->orWhereHas('servicio', function($qs) use ($search) {
+                    $qs->where('nombre', 'LIKE', "%{$search}%");
+                });
+            });
+        }
+
+        $citas = $query->orderBy('fecha', 'desc')
+            ->orderBy('hora', 'desc')
+            ->paginate(15)
+            ->withQueryString();
 
         // Fetch all stylists for the quick assignment dropdown/modal
         $estilistas = User::whereHas('role', function($q) { 
@@ -198,6 +213,23 @@ class CitaController extends Controller
                 'estado' => 'pendiente',
                 'fecha_calculo' => now()
             ]);
+
+            // 5. Acumular Puntos de Lealtad (Opción 2: 1 punto por cada 10 Bs)
+            $puntosGanados = (int) floor($precioFinal / 10);
+            if ($puntosGanados > 0 && $cita->cliente_id) {
+                $cliente = User::find($cita->cliente_id);
+                if ($cliente) {
+                    $cliente->increment('puntos', $puntosGanados);
+
+                    PuntosHistorial::create([
+                        'user_id' => $cliente->id,
+                        'puntos' => $puntosGanados,
+                        'tipo' => 'ganado',
+                        'descripcion' => "Ganado por servicio completado (Cita ID: {$cita->id})",
+                        'cita_id' => $cita->id
+                    ]);
+                }
+            }
 
             DB::commit();
 
