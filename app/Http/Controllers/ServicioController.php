@@ -18,7 +18,9 @@ class ServicioController extends Controller
             $searchLower = mb_strtolower($search, 'UTF-8');
             $query->where(function($q) use ($searchLower) {
                 $q->whereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"])
-                  ->orWhereRaw('LOWER(descripcion) LIKE ?', ["%{$searchLower}%"]);
+                  ->orWhereRaw('LOWER(COALESCE(descripcion, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(precio AS text) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(duracion_minutos AS text) LIKE ?', ["%{$searchLower}%"]);
             });
         }
 

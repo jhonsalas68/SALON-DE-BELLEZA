@@ -26,9 +26,19 @@ class VentaController extends Controller
             $search = trim($request->search);
             $searchLower = mb_strtolower($search, 'UTF-8');
             $query->where(function($q) use ($searchLower) {
-                $q->whereRaw('LOWER(cliente_nombre) LIKE ?', ["%{$searchLower}%"])
+                $q->whereRaw('LOWER(COALESCE(cliente_nombre, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(COALESCE(metodo_pago, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(COALESCE(estado_pago, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(total AS text) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(fecha_venta AS text) LIKE ?', ["%{$searchLower}%"])
                   ->orWhereHas('cliente', function($qc) use ($searchLower) {
-                      $qc->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"]);
+                      $qc->whereRaw('LOWER(COALESCE(name, \'\')) LIKE ?', ["%{$searchLower}%"])
+                         ->orWhereRaw('LOWER(COALESCE(email, \'\')) LIKE ?', ["%{$searchLower}%"]);
+                  })->orWhereHas('vendedor', function($qv) use ($searchLower) {
+                      $qv->whereRaw('LOWER(COALESCE(name, \'\')) LIKE ?', ["%{$searchLower}%"]);
+                  })->orWhereHas('detalles.producto', function($qp) use ($searchLower) {
+                      $qp->whereRaw('LOWER(COALESCE(nombre, \'\')) LIKE ?', ["%{$searchLower}%"])
+                         ->orWhereRaw('LOWER(COALESCE(codigo, \'\')) LIKE ?', ["%{$searchLower}%"]);
                   });
             });
         }

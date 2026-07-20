@@ -14,14 +14,20 @@ class ProductoController extends Controller
     {
         $query = Producto::with('promotor');
 
-        // Búsqueda insensible a mayúsculas/minúsculas por nombre, código o descripción
+        // Búsqueda insensible a mayúsculas/minúsculas en TODOS los campos del producto y proveedor
         if ($request->filled('search')) {
             $search = trim($request->search);
             $searchLower = mb_strtolower($search, 'UTF-8');
             $query->where(function($q) use ($searchLower) {
                 $q->whereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"])
                   ->orWhereRaw('LOWER(codigo) LIKE ?', ["%{$searchLower}%"])
-                  ->orWhereRaw('LOWER(descripcion) LIKE ?', ["%{$searchLower}%"]);
+                  ->orWhereRaw('LOWER(COALESCE(descripcion, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(precio_venta AS text) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(precio_compra AS text) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(stock AS text) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereHas('promotor', function($qp) use ($searchLower) {
+                      $qp->whereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"]);
+                  });
             });
         }
 

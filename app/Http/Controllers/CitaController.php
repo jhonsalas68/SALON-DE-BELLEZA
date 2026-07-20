@@ -33,15 +33,20 @@ class CitaController extends Controller
             $search = trim($request->search);
             $searchLower = mb_strtolower($search, 'UTF-8');
             $query->where(function($q) use ($searchLower) {
-                $q->whereHas('cliente', function($qc) use ($searchLower) {
-                    $qc->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
-                       ->orWhereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"]);
-                })->orWhereHas('estilista', function($qe) use ($searchLower) {
-                    $qe->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
-                       ->orWhereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"]);
-                })->orWhereHas('servicio', function($qs) use ($searchLower) {
-                    $qs->whereRaw('LOWER(nombre) LIKE ?', ["%{$searchLower}%"]);
-                });
+                $q->whereRaw('LOWER(COALESCE(estado, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(COALESCE(notas, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(fecha AS text) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('CAST(hora AS text) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereHas('cliente', function($qc) use ($searchLower) {
+                      $qc->whereRaw('LOWER(COALESCE(name, \'\')) LIKE ?', ["%{$searchLower}%"])
+                         ->orWhereRaw('LOWER(COALESCE(email, \'\')) LIKE ?', ["%{$searchLower}%"])
+                         ->orWhereRaw('LOWER(COALESCE(telefono, \'\')) LIKE ?', ["%{$searchLower}%"]);
+                  })->orWhereHas('estilista', function($qe) use ($searchLower) {
+                      $qe->whereRaw('LOWER(COALESCE(name, \'\')) LIKE ?', ["%{$searchLower}%"]);
+                  })->orWhereHas('servicio', function($qs) use ($searchLower) {
+                      $qs->whereRaw('LOWER(COALESCE(nombre, \'\')) LIKE ?', ["%{$searchLower}%"])
+                         ->orWhereRaw('CAST(precio AS text) LIKE ?', ["%{$searchLower}%"]);
+                  });
             });
         }
 
