@@ -9,9 +9,22 @@ use App\Traits\LogsActivity;
 class PromotorController extends Controller
 {
     use LogsActivity;
-    public function index()
+    public function index(Request $request)
     {
-        $promotores = Promotor::latest()->get();
+        $query = Promotor::query();
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $searchLower = mb_strtolower($search, 'UTF-8');
+            $query->where(function($q) use ($searchLower) {
+                $q->whereRaw('LOWER(COALESCE(nombre, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(COALESCE(empresa, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(COALESCE(telefono, \'\')) LIKE ?', ["%{$searchLower}%"])
+                  ->orWhereRaw('LOWER(COALESCE(notas, \'\')) LIKE ?', ["%{$searchLower}%"]);
+            });
+        }
+
+        $promotores = $query->latest()->get();
         return view('promotores.index', compact('promotores'));
     }
 
