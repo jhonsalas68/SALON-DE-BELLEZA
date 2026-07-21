@@ -8,6 +8,7 @@ use App\Models\Producto;
 use App\Models\User;
 use App\Models\Promocion;
 use App\Models\Alerta;
+use App\Models\PuntosHistorial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Traits\LogsActivity;
