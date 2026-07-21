@@ -309,6 +309,24 @@ class VentaController extends Controller
                 $venta->estado_pago = 'completado';
                 $venta->save();
 
+                // Acumular Puntos de Fidelidad (1 punto cada 10 Bs)
+                if ($venta->cliente_id) {
+                    $puntosGanados = (int) floor($venta->total / 10);
+                    if ($puntosGanados > 0) {
+                        $cliente = User::find($venta->cliente_id);
+                        if ($cliente) {
+                            $cliente->increment('puntos', $puntosGanados);
+                            \App\Models\PuntosHistorial::create([
+                                'user_id' => $cliente->id,
+                                'puntos' => $puntosGanados,
+                                'tipo' => 'ganado',
+                                'descripcion' => "Ganado por compra de productos en línea (Venta ID: {$venta->id})",
+                                'venta_id' => $venta->id
+                            ]);
+                        }
+                    }
+                }
+
                 DB::commit();
 
                 $this->logActivity('PAYMENT_COMPLETE', "Pago de venta completado vía Stripe ID: {$venta->id}. Total: Bs{$venta->total}", $venta->load('detalles')->toArray());
@@ -396,6 +414,23 @@ class VentaController extends Controller
                                 'tipo' => 'stock_bajo',
                                 'mensaje' => "El producto '{$producto->nombre}' ha alcanzado el stock mínimo (Disponible: {$producto->stock}, Mínimo: {$producto->stock_minimo}).",
                                 'producto_id' => $producto->id,
+                            ]);
+                        }
+                    }
+                }
+                // Acumular Puntos de Fidelidad (1 punto cada 10 Bs)
+                if ($venta->cliente_id) {
+                    $puntosGanados = (int) floor($venta->total / 10);
+                    if ($puntosGanados > 0) {
+                        $cliente = User::find($venta->cliente_id);
+                        if ($cliente) {
+                            $cliente->increment('puntos', $puntosGanados);
+                            \App\Models\PuntosHistorial::create([
+                                'user_id' => $cliente->id,
+                                'puntos' => $puntosGanados,
+                                'tipo' => 'ganado',
+                                'descripcion' => "Ganado por compra de productos (Venta ID: {$venta->id})",
+                                'venta_id' => $venta->id
                             ]);
                         }
                     }

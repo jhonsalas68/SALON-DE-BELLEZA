@@ -15,9 +15,10 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Ejecutar migraciones con tolerancia a fallos
+# Ejecutar migraciones y sincronizar puntos con tolerancia a fallos
 echo "Ejecutando migraciones de base de datos..."
 php artisan migrate --force || echo "Aviso: No se pudieron ejecutar las migraciones en el arranque inicial."
+php artisan db:seed --class=SyncPuntosSeeder --force || echo "Aviso: No se pudo sincronizar los puntos en el arranque."
 
 # Asegurar permisos correctos para www-data después de ejecutar artisan como root
 echo "Ajustando permisos de storage y bootstrap/cache..."

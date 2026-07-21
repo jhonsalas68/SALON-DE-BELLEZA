@@ -30,6 +30,57 @@ Route::get('/setup-system', function () {
     }
 });
 
+// Ruta de sincronización retroactiva de puntos para ventas y citas completadas existentes
+Route::get('/sync-puntos', function() {
+    $ventas = \App\Models\Venta::where('estado_pago', 'completado')->whereNotNull('cliente_id')->get();
+    $puntosAsignados = 0;
+    foreach ($ventas as $v) {
+        $puntos = (int) floor($v->total / 10);
+        if ($puntos > 0) {
+            $c = \App\Models\User::find($v->cliente_id);
+            if ($c) {
+                $existe = \App\Models\PuntosHistorial::where('venta_id', $v->id)->exists();
+                if (!$existe) {
+                    $c->increment('puntos', $puntos);
+                    \App\Models\PuntosHistorial::create([
+                        'user_id' => $c->id,
+                        'puntos' => $puntos,
+                        'tipo' => 'ganado',
+                        'descripcion' => "Ganado por compra realizada (Venta ID: {$v->id})",
+                        'venta_id' => $v->id
+                    ]);
+                    $puntosAsignados += $puntos;
+                }
+            }
+        }
+    }
+
+    $citas = \App\Models\Cita::where('estado', 'completada')->whereNotNull('cliente_id')->with('servicio')->get();
+    foreach ($citas as $ci) {
+        $precio = $ci->servicio ? $ci->servicio->precio : 0;
+        $puntos = (int) floor($precio / 10);
+        if ($puntos > 0) {
+            $c = \App\Models\User::find($ci->cliente_id);
+            if ($c) {
+                $existe = \App\Models\PuntosHistorial::where('cita_id', $ci->id)->exists();
+                if (!$existe) {
+                    $c->increment('puntos', $puntos);
+                    \App\Models\PuntosHistorial::create([
+                        'user_id' => $c->id,
+                        'puntos' => $puntos,
+                        'tipo' => 'ganado',
+                        'descripcion' => "Ganado por servicio completado (Cita ID: {$ci->id})",
+                        'cita_id' => $ci->id
+                    ]);
+                    $puntosAsignados += $puntos;
+                }
+            }
+        }
+    }
+
+    return "Puntos sincronizados exitosamente. Se asignaron {$puntosAsignados} puntos en total.";
+});
+
 // Password reset routes
 Route::get('/forgot-password', [AuthController::class, 'showForgetPasswordForm'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
