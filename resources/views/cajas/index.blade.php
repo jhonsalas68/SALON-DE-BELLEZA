@@ -10,26 +10,43 @@
             Control de Caja Chica y Arqueo Diario
         </h1>
         <p class="text-xs font-semibold text-gray-500 mt-1">
-            Gestión de turnos de caja, fondo inicial, gastos operativos y arqueo de cierre (Opción 4)
+            Gestión de turnos de caja, fondo inicial, gastos operativos y arqueo de cierre.
         </p>
     </div>
-    @if(!$cajaActual)
-    <button onclick="openModal('abrirCajaModal')" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2">
-        <i class="fas fa-key"></i>
-        <span>Abrir Turno de Caja</span>
-    </button>
-    @else
-    <div class="flex items-center space-x-3">
+    <div class="flex items-center gap-3">
+        <div class="relative inline-block text-left" x-data="{ open: false }">
+            <button @click="open = !open" type="button" class="bg-stone-800 hover:bg-stone-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all flex items-center gap-2 text-xs">
+                <i class="fas fa-file-export text-amber-400"></i>
+                <span>Exportar</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div x-show="open" @click.away="open = false" class="origin-top-right absolute right-0 mt-2 w-48 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 divide-y divide-gray-100 p-1">
+                <a href="{{ route('reports.export', ['modulo' => 'cajas', 'format' => 'excel']) }}" class="flex items-center space-x-2 px-4 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors">
+                    <i class="fas fa-file-excel text-emerald-500 text-sm"></i>
+                    <span>Exportar Excel (.csv)</span>
+                </a>
+                <a href="{{ route('reports.export', ['modulo' => 'cajas', 'format' => 'pdf']) }}" class="flex items-center space-x-2 px-4 py-2.5 text-xs font-bold text-rose-700 hover:bg-rose-50 rounded-xl transition-colors">
+                    <i class="fas fa-file-pdf text-rose-500 text-sm"></i>
+                    <span>Reporte PDF / Imprimir</span>
+                </a>
+            </div>
+        </div>
+        @if(!$cajaActual)
+        <button onclick="openModal('abrirCajaModal')" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2">
+            <i class="fas fa-key"></i>
+            <span>Abrir Turno de Caja</span>
+        </button>
+        @else
         <button onclick="openModal('movimientoModal')" class="px-4 py-2.5 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow transition-all flex items-center space-x-2">
             <i class="fas fa-plus-circle"></i>
-            <span>Nuevo Movimiento (Gasto/Ingreso)</span>
+            <span>Nuevo Movimiento</span>
         </button>
         <button onclick="openModal('cerrarCajaModal')" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2">
             <i class="fas fa-lock"></i>
             <span>Cerrar y Arquear Caja</span>
         </button>
+        @endif
     </div>
-    @endif
 </div>
 @endsection
 

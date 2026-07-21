@@ -2,126 +2,234 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Venta;
-use App\Models\VentaDetalle;
-use App\Models\Cita;
-use App\Models\Comision;
-use App\Models\Producto;
-use App\Models\User;
-use App\Models\Alerta;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use App\Traits\LogsActivity;
+use App\Models\User;
+use App\Models\Servicio;
+use App\Models\Producto;
+use App\Models\Cita;
+use App\Models\Venta;
+use App\Models\Comision;
+use App\Models\Caja;
+use App\Models\Promocion;
+use App\Models\Valoracion;
+use App\Models\ActivityLog;
 
 class ReporteController extends Controller
 {
-    use LogsActivity;
-
-    public function index(Request $request)
+    public function export(Request $request, string $modulo, string $format)
     {
-        $rango = $request->get('rango', 'mes'); // hoy, semana, mes, personalizado
-        $fechaInicio = null;
-        $fechaFin = null;
-
-        if ($rango === 'hoy') {
-            $fechaInicio = Carbon::today()->startOfDay();
-            $fechaFin = Carbon::today()->endOfDay();
-        } elseif ($rango === 'semana') {
-            $fechaInicio = Carbon::now()->startOfWeek();
-            $fechaFin = Carbon::now()->endOfWeek();
-        } elseif ($rango === 'personalizado' && $request->filled('fecha_inicio') && $request->filled('fecha_fin')) {
-            $fechaInicio = Carbon::parse($request->fecha_inicio)->startOfDay();
-            $fechaFin = Carbon::parse($request->fecha_fin)->endOfDay();
-        } else {
-            // Predeterminado: Este Mes
-            $rango = 'mes';
-            $fechaInicio = Carbon::now()->startOfMonth();
-            $fechaFin = Carbon::now()->endOfMonth();
+        $data = $this->getModuleData($modulo, $request);
+        
+        if ($format === 'excel' || $format === 'csv') {
+            return $this->exportExcel($modulo, $data);
         }
 
-        // 1. Métricas de Ventas de Productos
-        $ventasQuery = Venta::whereBetween('fecha_venta', [$fechaInicio, $fechaFin])
-            ->where('estado_pago', 'completado');
-
-        $totalIngresoVentas = (clone $ventasQuery)->sum('total');
-        $totalCantidadVentas = (clone $ventasQuery)->count();
-
-        // Top Productos Vendidos en el Periodo
-        $topProductos = VentaDetalle::selectRaw('producto_id, SUM(cantidad) as total_vendido, SUM(subtotal) as total_ingreso')
-            ->whereHas('venta', function($q) use ($fechaInicio, $fechaFin) {
-                $q->whereBetween('fecha_venta', [$fechaInicio, $fechaFin])
-                  ->where('estado_pago', 'completado');
-            })
-            ->groupBy('producto_id')
-            ->with('producto')
-            ->orderBy('total_vendido', 'desc')
-            ->take(5)
-            ->get();
-
-        // 2. Métricas de Servicios Realizados (Citas Completadas)
-        $citasQuery = Cita::whereBetween('fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')])
-            ->where('estado', 'completada');
-
-        $totalServiciosCompletados = (clone $citasQuery)->count();
-
-        // 3. Métricas de Comisiones de Estilistas
-        $comisionesQuery = Comision::whereBetween('fecha_calculo', [$fechaInicio, $fechaFin]);
-
-        $totalComisionesGeneradas = (clone $comisionesQuery)->sum('monto_comision');
-        $totalComisionesPagadas = (clone $comisionesQuery)->where('estado', 'pagado')->sum('monto_comision');
-        $totalComisionesPendientes = (clone $comisionesQuery)->where('estado', 'pendiente')->sum('monto_comision');
-        $totalIngresoServicios = (clone $comisionesQuery)->sum('monto_servicio');
-
-        // Rendimiento por Estilista
-        $rendimientoEstilistas = User::whereHas('role', function($q) {
-                $q->where('slug', 'estilista');
-            })
-            ->withCount(['citas' => function($q) use ($fechaInicio, $fechaFin) {
-                $q->whereBetween('fecha', [$fechaInicio->format('Y-m-d'), $fechaFin->format('Y-m-d')])
-                  ->where('estado', 'completada');
-            }])
-            ->withSum(['comisiones as total_comisiones' => function($q) use ($fechaInicio, $fechaFin) {
-                $q->whereBetween('fecha_calculo', [$fechaInicio, $fechaFin]);
-            }], 'monto_comision')
-            ->withSum(['comisiones as total_ingresos_generados' => function($q) use ($fechaInicio, $fechaFin) {
-                $q->whereBetween('fecha_calculo', [$fechaInicio, $fechaFin]);
-            }], 'monto_servicio')
-            ->get();
-
-        // 4. Alertas de Stock Bajo Actuales
-        $productosStockBajo = Producto::whereColumn('stock', '<=', 'stock_minimo')->get();
-
-        if (auth()->check()) {
-            $this->logActivity('VIEW_REPORTS', "Consulta de reportes administrativos. Rango: {$rango}", [
-                'rango' => $rango,
-                'fecha_inicio' => $fechaInicio->toDateTimeString(),
-                'fecha_fin' => $fechaFin->toDateTimeString()
-            ]);
+        if ($format === 'pdf') {
+            return $this->exportPdfView($modulo, $data);
         }
 
-        return view('reportes.index', compact(
-            'rango',
-            'fechaInicio',
-            'fechaFin',
-            'totalIngresoVentas',
-            'totalCantidadVentas',
-            'topProductos',
-            'totalServiciosCompletados',
-            'totalIngresoServicios',
-            'totalComisionesGeneradas',
-            'totalComisionesPagadas',
-            'totalComisionesPendientes',
-            'rendimientoEstilistas',
-            'productosStockBajo'
-        ));
+        abort(404, 'Formato no soportado.');
     }
 
-    public function imprimir(Request $request)
+    private function getModuleData(string $modulo, Request $request): array
     {
-        // Reutilizar la lógica de obtención de datos para la vista de impresión limpia
-        $response = $this->index($request);
-        $data = $response->getData();
+        switch ($modulo) {
+            case 'clientes':
+                $headers = ['ID', 'Nombre', 'Email', 'Teléfono', 'Puntos Fidelidad', 'Fecha Registro'];
+                $rows = User::whereHas('role', function($q) { $q->where('slug', 'cliente'); })
+                    ->orderBy('created_at', 'desc')
+                    ->get()
+                    ->map(fn($u) => [
+                        $u->id,
+                        $u->name ?? 'N/A',
+                        $u->email,
+                        $u->telefono ?? 'N/A',
+                        $u->puntos ?? 0,
+                        $u->created_at->format('d/m/Y H:i')
+                    ])->toArray();
+                $title = 'Reporte General de Clientes';
+                break;
 
-        return view('reportes.imprimir', (array) $data);
+            case 'servicios':
+                $headers = ['ID', 'Nombre', 'Categoría', 'Precio (Bs)', 'Duración (min)', 'Estado'];
+                $rows = Servicio::with('categoria')->get()->map(fn($s) => [
+                    $s->id,
+                    $s->nombre,
+                    $s->categoria->nombre ?? 'Sin Categoría',
+                    number_format($s->precio, 2),
+                    $s->duracion_minutos,
+                    $s->activo ? 'Activo' : 'Inactivo'
+                ])->toArray();
+                $title = 'Catálogo de Servicios';
+                break;
+
+            case 'productos':
+                $headers = ['ID', 'Código', 'Nombre', 'Categoría', 'Precio Compra (Bs)', 'Precio Venta (Bs)', 'Stock', 'Stock Mínimo'];
+                $rows = Producto::with('categoria')->get()->map(fn($p) => [
+                    $p->id,
+                    $p->codigo ?? 'N/A',
+                    $p->nombre,
+                    $p->categoria->nombre ?? 'Sin Categoría',
+                    number_format($p->precio_compra, 2),
+                    number_format($p->precio_venta, 2),
+                    $p->stock,
+                    $p->stock_minimo
+                ])->toArray();
+                $title = 'Inventario de Productos';
+                break;
+
+            case 'citas':
+                $headers = ['ID', 'Fecha', 'Hora', 'Cliente', 'Servicio', 'Estilista', 'Sucursal', 'Estado', 'Precio (Bs)'];
+                $rows = Cita::with(['cliente', 'servicio', 'estilista', 'sucursal'])->orderBy('fecha', 'desc')->get()->map(fn($c) => [
+                    $c->id,
+                    $c->fecha,
+                    $c->hora,
+                    $c->cliente->name ?? 'Casual',
+                    $c->servicio->nombre ?? 'N/A',
+                    $c->estilista->name ?? 'No asignado',
+                    $c->sucursal->nombre ?? 'Principal',
+                    strtoupper($c->estado),
+                    number_format($c->servicio->precio ?? 0, 2)
+                ])->toArray();
+                $title = 'Reporte General de Citas y Reservas';
+                break;
+
+            case 'ventas':
+                $headers = ['ID', 'Fecha Venta', 'Cliente', 'Vendedor', 'Subtotal (Bs)', 'Descuento (Bs)', 'Total (Bs)', 'Método Pago', 'Estado Pago'];
+                $rows = Venta::with(['cliente', 'vendedor'])->orderBy('fecha_venta', 'desc')->get()->map(fn($v) => [
+                    $v->id,
+                    $v->fecha_venta ? \Carbon\Carbon::parse($v->fecha_venta)->format('d/m/Y H:i') : 'N/A',
+                    $v->cliente_nombre ?: ($v->cliente->name ?? 'Casual'),
+                    $v->vendedor->name ?? 'Sistema',
+                    number_format($v->subtotal, 2),
+                    number_format($v->descuento, 2),
+                    number_format($v->total, 2),
+                    strtoupper($v->metodo_pago),
+                    strtoupper($v->estado_pago)
+                ])->toArray();
+                $title = 'Reporte de Ventas e Ingresos';
+                break;
+
+            case 'comisiones':
+                $headers = ['ID', 'Fecha', 'Estilista', 'Cita ID', 'Servicio', 'Precio Servicio (Bs)', 'Porcentaje (%)', 'Monto Comisión (Bs)', 'Estado'];
+                $rows = Comision::with(['estilista', 'cita.servicio'])->orderBy('fecha_generacion', 'desc')->get()->map(fn($co) => [
+                    $co->id,
+                    \Carbon\Carbon::parse($co->fecha_generacion)->format('d/m/Y'),
+                    $co->estilista->name ?? 'N/A',
+                    $co->cita_id,
+                    $co->cita->servicio->nombre ?? 'Servicio',
+                    number_format($co->precio_servicio, 2),
+                    $co->porcentaje_aplicado . '%',
+                    number_format($co->monto_comision, 2),
+                    strtoupper($co->estado_pago)
+                ])->toArray();
+                $title = 'Reporte de Comisiones de Estilistas';
+                break;
+
+            case 'cajas':
+                $headers = ['ID', 'Apertura', 'Cierre', 'Cajero', 'Apertura (Bs)', 'Ventas (Bs)', 'Servicios (Bs)', 'Esperado (Bs)', 'Cierre Real (Bs)', 'Diferencia (Bs)', 'Estado'];
+                $rows = Caja::with('user')->orderBy('fecha_apertura', 'desc')->get()->map(fn($cj) => [
+                    $cj->id,
+                    \Carbon\Carbon::parse($cj->fecha_apertura)->format('d/m/Y H:i'),
+                    $cj->fecha_cierre ? \Carbon\Carbon::parse($cj->fecha_cierre)->format('d/m/Y H:i') : 'Abierta',
+                    $cj->user->name ?? 'N/A',
+                    number_format($cj->monto_apertura, 2),
+                    number_format($cj->monto_ventas_efectivo ?? 0, 2),
+                    number_format($cj->monto_servicios_efectivo ?? 0, 2),
+                    number_format($cj->monto_esperado_efectivo ?? 0, 2),
+                    number_format($cj->monto_cierre_efectivo ?? 0, 2),
+                    number_format($cj->diferencia ?? 0, 2),
+                    strtoupper($cj->estado)
+                ])->toArray();
+                $title = 'Reporte de Arqueos de Caja Chica';
+                break;
+
+            case 'promociones':
+                $headers = ['ID', 'Título', 'Item Aplicable', 'Descuento (%)', 'Fecha Inicio', 'Fecha Fin', 'Estado'];
+                $rows = Promocion::with(['servicio', 'producto'])->get()->map(fn($pr) => [
+                    $pr->id,
+                    $pr->titulo,
+                    $pr->servicio->nombre ?? ($pr->producto->nombre ?? 'General'),
+                    $pr->descuento_porcentaje . '%',
+                    $pr->fecha_inicio,
+                    $pr->fecha_fin,
+                    $pr->activo ? 'ACTIVA' : 'INACTIVA'
+                ])->toArray();
+                $title = 'Reporte de Promociones y Descuentos';
+                break;
+
+            case 'valoraciones':
+                $headers = ['ID', 'Fecha', 'Cliente', 'Estilista', 'Cita ID', 'Calificación', 'Comentario'];
+                $rows = Valoracion::with(['cliente', 'estilista'])->orderBy('fecha', 'desc')->get()->map(fn($val) => [
+                    $val->id,
+                    \Carbon\Carbon::parse($val->fecha)->format('d/m/Y H:i'),
+                    $val->cliente->name ?? 'Anónimo',
+                    $val->estilista->name ?? 'General',
+                    $val->cita_id ?? 'N/A',
+                    $val->estrellas . ' ★',
+                    $val->comentario ?? 'Sin comentario'
+                ])->toArray();
+                $title = 'Reporte de Valoraciones y Opiniones NPS';
+                break;
+
+            case 'activity-logs':
+                $headers = ['ID', 'Fecha / Hora', 'Usuario', 'Acción', 'Descripción', 'IP'];
+                $rows = ActivityLog::with('user')->orderBy('created_at', 'desc')->take(200)->get()->map(fn($log) => [
+                    $log->id,
+                    $log->created_at->format('d/m/Y H:i:s'),
+                    $log->user->name ?? 'Sistema',
+                    $log->action,
+                    $log->description,
+                    $log->ip_address ?? 'N/A'
+                ])->toArray();
+                $title = 'Reporte de Bitácora de Auditoría';
+                break;
+
+            default:
+                abort(404, 'Módulo no encontrado');
+        }
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+            'title' => $title,
+            'modulo' => $modulo,
+            'fecha' => now()->format('d/m/Y H:i:s')
+        ];
+    }
+
+    private function exportExcel(string $modulo, array $data)
+    {
+        $filename = "reporte_{$modulo}_" . now()->format('Y-m-d_His') . ".csv";
+
+        $callback = function() use ($data) {
+            $file = fopen('php://output', 'w');
+            
+            // UTF-8 BOM for Excel to handle special characters correctly
+            fputs($file, "\xEF\xBB\xBF");
+
+            // Header row
+            fputcsv($file, $data['headers']);
+
+            // Data rows
+            foreach ($data['rows'] as $row) {
+                fputcsv($file, $row);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-Type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename={$filename}",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ]);
+    }
+
+    private function exportPdfView(string $modulo, array $data)
+    {
+        return view('reports.print', compact('data'));
     }
 }

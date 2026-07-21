@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ReporteController;
+
+Route::get('/reports/export/{modulo}/{format}', [ReporteController::class, 'export'])
+    ->name('reports.export')
+    ->middleware('auth');
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
