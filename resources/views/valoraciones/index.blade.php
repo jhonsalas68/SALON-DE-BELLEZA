@@ -17,6 +17,80 @@
 @endsection
 
 @section('content')
+<!-- Formulario de Valoración para Clientes / Servicios Atendidos -->
+<div class="bg-gradient-to-r from-rose-500 to-amber-500 p-0.5 rounded-3xl shadow-md mb-8">
+    <div class="bg-white p-6 sm:p-8 rounded-[23px]">
+        <div class="flex items-center space-x-3 mb-6">
+            <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                <i class="fas fa-star"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-black text-gray-900 tracking-tight">Dejar tu Calificación y Opinión</h2>
+                <p class="text-xs text-gray-500 font-medium">Evalúa la atención y calidad del servicio recibido</p>
+            </div>
+        </div>
+
+        @if(isset($citasPendientes) && $citasPendientes->count() > 0)
+            <form action="{{ route('valoraciones.store') }}" method="POST" class="space-y-5">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-extrabold uppercase text-gray-700 mb-2">Selecciona el Servicio Realizado</label>
+                        <select name="cita_id" required class="w-full bg-gray-50 border border-gray-200 text-xs font-bold rounded-2xl p-3.5 text-gray-800 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer">
+                            @foreach($citasPendientes as $cita)
+                                <option value="{{ $cita->id }}">
+                                    {{ $cita->servicio->nombre ?? 'Servicio' }} - Atendido por {{ $cita->estilista->name ?? 'Estilista' }} ({{ \Carbon\Carbon::parse($cita->fecha)->format('d/m/Y') }})
+                                    @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('recepcionista'))
+                                        [Cliente: {{ $cita->cliente->name ?? 'Cliente' }}]
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-extrabold uppercase text-gray-700 mb-2">Calificación (1 a 5 Estrellas)</label>
+                        <div class="flex items-center justify-between bg-gray-50 p-2.5 px-4 rounded-2xl border border-gray-200">
+                            <input type="hidden" name="estrellas" id="estrellas_input" value="5" required>
+                            <div class="flex items-center space-x-1 cursor-pointer text-amber-400 text-2xl" id="star_rating_container">
+                                <i class="fas fa-star star-btn transition-transform duration-150" data-value="1"></i>
+                                <i class="fas fa-star star-btn transition-transform duration-150" data-value="2"></i>
+                                <i class="fas fa-star star-btn transition-transform duration-150" data-value="3"></i>
+                                <i class="fas fa-star star-btn transition-transform duration-150" data-value="4"></i>
+                                <i class="fas fa-star star-btn transition-transform duration-150" data-value="5"></i>
+                            </div>
+                            <span class="text-xs font-black text-amber-600" id="star_label">5.0 / Excelente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold uppercase text-gray-700 mb-2">Tu Comentario u Opinión (Opcional)</label>
+                    <textarea name="comentario" rows="3" placeholder="¿Qué te pareció la atención, la puntualidad y el resultado de tu servicio? Cuéntanos tu opinión..." class="w-full bg-gray-50 border border-gray-200 text-xs font-medium rounded-2xl p-3.5 text-gray-800 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"></textarea>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-extrabold px-6 py-3.5 rounded-2xl text-xs shadow-md shadow-rose-200 transition-all flex items-center space-x-2 transform hover:scale-[1.02] active:scale-95">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Enviar Valoración</span>
+                    </button>
+                </div>
+            </form>
+        @else
+            <div class="p-4 bg-rose-50/60 border border-rose-100 rounded-2xl flex items-center space-x-3 text-rose-700">
+                <i class="fas fa-info-circle text-lg shrink-0 text-rose-500"></i>
+                <p class="text-xs font-semibold">
+                    @if(auth()->user()->hasRole('cliente'))
+                        No tienes citas completadas pendientes de calificar. Tan pronto asistas a tu cita y el servicio sea completado, podrás evaluarlo desde aquí.
+                    @else
+                        No hay servicios completados pendientes de valorar en este momento.
+                    @endif
+                </p>
+            </div>
+        @endif
+    </div>
+</div>
+
 <!-- Resumen de Satisfacción -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
@@ -107,4 +181,55 @@
         {{ $valoraciones->links() }}
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star-btn');
+        const input = document.getElementById('estrellas_input');
+        const label = document.getElementById('star_label');
+
+        if (!stars.length || !input || !label) return;
+
+        const labels = {
+            1: '1.0 / Deficiente',
+            2: '2.0 / Regular',
+            3: '3.0 / Bueno',
+            4: '4.0 / Muy Bueno',
+            5: '5.0 / Excelente'
+        };
+
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const val = parseInt(this.getAttribute('data-value'));
+                input.value = val;
+                label.textContent = labels[val] || (val + '.0');
+                
+                stars.forEach((s, idx) => {
+                    if (idx < val) {
+                        s.classList.remove('text-gray-300');
+                        s.classList.add('text-amber-400');
+                    } else {
+                        s.classList.remove('text-amber-400');
+                        s.classList.add('text-gray-300');
+                    }
+                });
+            });
+
+            star.addEventListener('mouseenter', function() {
+                const val = parseInt(this.getAttribute('data-value'));
+                stars.forEach((s, idx) => {
+                    if (idx < val) {
+                        s.classList.add('scale-125');
+                    }
+                });
+            });
+
+            star.addEventListener('mouseleave', function() {
+                stars.forEach(s => s.classList.remove('scale-125'));
+            });
+        });
+    });
+</script>
 @endsection

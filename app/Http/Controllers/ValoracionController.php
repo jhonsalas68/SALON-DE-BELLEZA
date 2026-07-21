@@ -28,7 +28,34 @@ class ValoracionController extends Controller
             ->withCount('valoracionesRecibidas as total_opiniones')
             ->get();
 
-        return view('valoraciones.index', compact('valoraciones', 'promedioGlobal', 'rendimientoEstilistas'));
+        // Citas completadas elegibles para valorar
+        $citasElegiblesQuery = Cita::with(['servicio', 'estilista', 'cliente', 'valoracion'])
+            ->where('estado', 'completada');
+
+        if ($user->hasRole('cliente')) {
+            $citasElegiblesQuery->where('cliente_id', $user->id);
+        }
+
+        $citasPendientes = (clone $citasElegiblesQuery)->whereDoesntHave('valoracion')->get();
+        $citasYaValoradas = (clone $citasElegiblesQuery)->whereHas('valoracion')->get();
+
+        // Si no hay de cliente pero es admin/recepcionista, mostrar citas pendientes de valorar generales
+        if ($citasPendientes->isEmpty() && !$user->hasRole('cliente')) {
+            $citasPendientes = Cita::with(['servicio', 'estilista', 'cliente', 'valoracion'])
+                ->where('estado', 'completada')
+                ->whereDoesntHave('valoracion')
+                ->orderBy('fecha', 'desc')
+                ->limit(20)
+                ->get();
+        }
+
+        return view('valoraciones.index', compact(
+            'valoraciones', 
+            'promedioGlobal', 
+            'rendimientoEstilistas',
+            'citasPendientes',
+            'citasYaValoradas'
+        ));
     }
 
     public function store(Request $request)

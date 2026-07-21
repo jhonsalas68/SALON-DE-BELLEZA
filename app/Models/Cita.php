@@ -33,4 +33,9 @@ class Cita extends Model
     {
         return $this->belongsTo(Servicio::class, 'servicio_id');
     }
+
+    public function valoracion()
+    {
+        return $this->hasOne(Valoracion::class, 'cita_id');
+    }
 }

@@ -98,8 +98,11 @@
                                 <span class="text-[10px] text-gray-450 italic font-medium max-w-[120px] block leading-tight text-right">Asigne estilista para completar</span>
                                 @endif
                             @elseif($cita->estado === 'completada')
+                            <a href="{{ route('valoraciones.index') }}" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors shadow-sm inline-flex items-center gap-1" title="Dejar opinión o valoración del servicio">
+                                <i class="fas fa-star"></i> Valorar
+                            </a>
                             <a href="{{ route('citas.show-ticket', $cita->id) }}" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors shadow-sm inline-flex items-center gap-1">
-                                <i class="fas fa-print"></i> Ver Ticket
+                                <i class="fas fa-print"></i> Ticket
                             </a>
                             @endif
 
