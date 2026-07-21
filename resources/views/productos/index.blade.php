@@ -9,13 +9,13 @@
             <p class="text-gray-500 font-medium">@if(auth()->user()->hasPermission('manage_inventory')) Administra los suministros y stock del salón. @else Productos premium seleccionados especialmente para ti. @endif</p>
         </div>
         <div class="flex items-center space-x-3">
-            <div class="relative inline-block text-left" x-data="{ open: false }">
-                <button @click="open = !open" type="button" class="bg-stone-800 hover:bg-stone-900 text-white px-5 py-3 rounded-2xl font-bold shadow-md transition-all flex items-center gap-2 text-sm">
+            <details class="relative inline-block text-left group">
+                <summary class="bg-stone-800 hover:bg-stone-900 text-white px-5 py-3 rounded-2xl font-bold shadow-md transition-all flex items-center gap-2 text-sm cursor-pointer list-none select-none">
                     <i class="fas fa-file-export text-amber-400"></i>
                     <span>Exportar</span>
-                    <i class="fas fa-chevron-down text-xs"></i>
-                </button>
-                <div x-show="open" x-cloak style="display: none;" @click.away="open = false" class="origin-top-right absolute right-0 mt-2 w-48 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 divide-y divide-gray-100 p-1">
+                    <i class="fas fa-chevron-down text-xs ml-1 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 divide-y divide-gray-100 p-1">
                     <a href="{{ route('reports.export', ['modulo' => 'productos', 'format' => 'excel']) }}" class="flex items-center space-x-2 px-4 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors">
                         <i class="fas fa-file-excel text-emerald-500 text-sm"></i>
                         <span>Exportar Excel (.csv)</span>
@@ -25,7 +25,7 @@
                         <span>Reporte PDF / Imprimir</span>
                     </a>
                 </div>
-            </div>
+            </details>
             @if(auth()->user()->hasPermission('manage_inventory'))
             <a href="{{ route('productos.create') }}" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-rose-100 flex items-center justify-center space-x-2">
                 <i class="fas fa-plus text-xs"></i>

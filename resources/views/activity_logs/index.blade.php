@@ -9,13 +9,13 @@
         <p class="text-gray-500 font-medium">Historial completo de acciones y seguridad.</p>
     </div>
     <div class="flex items-center gap-3">
-        <div class="relative inline-block text-left" x-data="{ open: false }">
-            <button @click="open = !open" type="button" class="bg-stone-800 hover:bg-stone-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all flex items-center gap-2 text-xs">
+        <details class="relative inline-block text-left group">
+            <summary class="bg-stone-800 hover:bg-stone-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all flex items-center gap-2 text-xs cursor-pointer list-none select-none">
                 <i class="fas fa-file-export text-amber-400"></i>
                 <span>Exportar Bitácora</span>
-                <i class="fas fa-chevron-down text-xs"></i>
-            </button>
-            <div x-show="open" x-cloak style="display: none;" @click.away="open = false" class="origin-top-right absolute right-0 mt-2 w-48 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 divide-y divide-gray-100 p-1">
+                <i class="fas fa-chevron-down text-xs ml-1 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 divide-y divide-gray-100 p-1">
                 <a href="{{ route('reports.export', ['modulo' => 'activity-logs', 'format' => 'excel']) }}" class="flex items-center space-x-2 px-4 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors">
                     <i class="fas fa-file-excel text-emerald-500 text-sm"></i>
                     <span>Exportar Excel (.csv)</span>
@@ -25,7 +25,7 @@
                     <span>Reporte PDF / Imprimir</span>
                 </a>
             </div>
-        </div>
+        </details>
         <div class="text-right">
             <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Total: {{ $logs->total() }} registros</span>
         </div>
