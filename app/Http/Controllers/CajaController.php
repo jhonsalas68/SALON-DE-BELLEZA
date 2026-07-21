@@ -32,9 +32,9 @@ class CajaController extends Controller
                 ->sum('total');
 
             // Calcular servicios completados en este turno
-            $montoServiciosEfectivo = Cita::where('updated_at', '>=', $cajaActual->fecha_apertura)
-                ->where('estado', 'completada')
-                ->join('servicios', 'citas.servicio_id', '=', 'servicios.id')
+            $montoServiciosEfectivo = Cita::join('servicios', 'citas.servicio_id', '=', 'servicios.id')
+                ->where('citas.updated_at', '>=', $cajaActual->fecha_apertura)
+                ->where('citas.estado', 'completada')
                 ->sum('servicios.precio');
 
             // Movimientos de caja chicas
@@ -101,9 +101,9 @@ class CajaController extends Controller
             ->where('estado_pago', 'completado')
             ->sum('total');
 
-        $montoServiciosEfectivo = Cita::where('updated_at', '>=', $caja->fecha_apertura)
-            ->where('estado', 'completada')
-            ->join('servicios', 'citas.servicio_id', '=', 'servicios.id')
+        $montoServiciosEfectivo = Cita::join('servicios', 'citas.servicio_id', '=', 'servicios.id')
+            ->where('citas.updated_at', '>=', $caja->fecha_apertura)
+            ->where('citas.estado', 'completada')
             ->sum('servicios.precio');
 
         $montoIngresos = $caja->movimientos()->where('tipo', 'ingreso')->sum('monto');
