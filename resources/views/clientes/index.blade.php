@@ -43,7 +43,13 @@
                     {{ strtoupper(substr($cliente->name ?? $cliente->email, 0, 1)) }}
                 </div>
                 <h3 class="text-lg font-extrabold text-gray-800 leading-tight mb-1 line-clamp-1" title="{{ $cliente->name }}">{{ $cliente->name ?? 'Sin Nombre' }}</h3>
-                <p class="text-xs font-medium text-gray-500 mb-4 truncate w-full" title="{{ $cliente->email }}">{{ $cliente->email }}</p>
+                <p class="text-xs font-medium text-gray-500 mb-2 truncate w-full" title="{{ $cliente->email }}">{{ $cliente->email }}</p>
+                
+                <div class="mb-4">
+                    <span class="inline-flex items-center px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200/60 rounded-full text-xs font-black shadow-xs">
+                        <i class="fas fa-gem text-amber-500 mr-1.5"></i> {{ $cliente->puntos ?? 0 }} Pts Fidelización
+                    </span>
+                </div>
                 
                 <div class="w-full flex justify-center space-x-2 border-t border-gray-50 pt-4 mt-2">
                     <a href="{{ route('citas.create', ['cliente_id' => $cliente->id]) }}" class="flex-1 py-2.5 bg-gray-50 hover:bg-rose-50 text-gray-600 hover:text-rose-600 rounded-xl font-bold text-xs transition-colors flex items-center justify-center space-x-2">

@@ -92,7 +92,10 @@
                             {{ strtoupper(substr(auth()->user()->name ?? auth()->user()->email, 0, 1)) }}
                         </div>
                         <div class="hidden sm:block text-left leading-tight pr-2">
-                            <p class="text-xs font-black text-stone-800">{{ auth()->user()->name ?? 'Cliente' }}</p>
+                            <p class="text-xs font-black text-stone-800 flex items-center gap-1.5">
+                                <span>{{ auth()->user()->name ?? 'Cliente' }}</span>
+                                <span class="text-[9px] bg-amber-100 text-amber-700 border border-amber-300/60 px-1.5 py-0.5 rounded-full font-black shadow-xs"><i class="fas fa-gem text-amber-500"></i> {{ auth()->user()->puntos ?? 0 }} pts</span>
+                            </p>
                             <p class="text-[8px] font-bold text-amber-600 uppercase tracking-widest">{{ auth()->user()->role->name ?? 'Usuario' }}</p>
                         </div>
                         

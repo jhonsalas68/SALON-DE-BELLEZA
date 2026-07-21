@@ -266,12 +266,57 @@
 
     @auth
         <section id="portal" class="py-20 px-6 bg-stone-50">
-            <div class="max-w-7xl mx-auto space-y-16">
+            <div class="max-w-7xl mx-auto space-y-12">
                 <!-- Header Portal -->
                 <div class="text-center space-y-2">
                     <span class="text-xs font-black uppercase tracking-widest text-amber-600">Mi Cuenta Cliente</span>
-                    <h3 class="serif text-3xl lg:text-4xl text-stone-900">Tu Historial de Actividad</h3>
+                    <h3 class="serif text-3xl lg:text-4xl text-stone-900">Tu Historial y Puntos de Fidelidad</h3>
                     <div class="h-1 w-12 bg-amber-500 mx-auto rounded-full mt-4"></div>
+                </div>
+
+                <!-- Tarjeta Principal de Programa de Puntos y Fidelización -->
+                <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-rose-500 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute right-0 top-0 -mr-10 -mt-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                        <div class="md:col-span-2 space-y-3">
+                            <div class="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black text-amber-100 uppercase tracking-widest">
+                                <i class="fas fa-gem"></i>
+                                <span>Programa de Fidelidad Anita</span>
+                            </div>
+                            <h4 class="serif text-3xl font-light">Acumula puntos en cada servicio</h4>
+                            <p class="text-xs text-amber-100 font-medium leading-relaxed max-w-xl">
+                                ¡Ganas <strong class="text-white font-extrabold">1 punto por cada 10 Bs</strong> consumidos en citas completadas y compras de productos! Tus puntos reconocen tu preferencia y te permiten acceder a promociones exclusivas.
+                            </p>
+                        </div>
+
+                        <div class="bg-white/15 backdrop-blur-md p-6 rounded-2xl border border-white/20 text-center space-y-1 shadow-inner">
+                            <span class="text-xs font-extrabold uppercase tracking-widest text-amber-100">Tus Puntos Disponibles</span>
+                            <div class="flex items-center justify-center space-x-2">
+                                <i class="fas fa-gem text-amber-300 text-3xl animate-pulse"></i>
+                                <span class="text-5xl font-black text-white">{{ auth()->user()->puntos ?? 0 }}</span>
+                            </div>
+                            <span class="text-[10px] text-amber-200 font-bold block uppercase tracking-wider">Puntos Acumulados</span>
+                        </div>
+                    </div>
+
+                    @if(isset($puntosHistorial) && !$puntosHistorial->isEmpty())
+                        <div class="mt-6 pt-6 border-t border-white/20">
+                            <p class="text-xs font-extrabold uppercase tracking-wider text-amber-100 mb-3"><i class="fas fa-history mr-1"></i> Historial Reciente de Puntos</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                @foreach($puntosHistorial as $ph)
+                                    <div class="bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+                                        <div class="truncate pr-2">
+                                            <p class="font-bold text-white truncate">{{ $ph->descripcion }}</p>
+                                            <span class="text-[9px] text-amber-200">{{ \Carbon\Carbon::parse($ph->created_at)->format('d/m/Y H:i') }}</span>
+                                        </div>
+                                        <span class="font-black px-2 py-0.5 rounded-md text-xs shrink-0 {{ $ph->tipo === 'ganado' ? 'bg-emerald-400/30 text-emerald-200' : 'bg-rose-400/30 text-rose-200' }}">
+                                            +{{ $ph->puntos }} pts
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">

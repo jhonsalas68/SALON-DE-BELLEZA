@@ -64,9 +64,14 @@ class LandingController extends Controller
                 ->where('estado', 'completada')
                 ->whereDoesntHave('valoracion')
                 ->get();
+
+            $puntosHistorial = \App\Models\PuntosHistorial::where('user_id', auth()->id())
+                ->orderBy('created_at', 'desc')
+                ->take(10)
+                ->get();
         }
 
-        return view('landing', compact('servicios', 'productos', 'promociones', 'estilistas', 'citas', 'compras', 'citasSinValorar'));
+        return view('landing', compact('servicios', 'productos', 'promociones', 'estilistas', 'citas', 'compras', 'citasSinValorar', 'puntosHistorial'));
     }
 
     public function agendarCita(Request $request)
