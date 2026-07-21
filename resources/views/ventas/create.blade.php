@@ -49,11 +49,35 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Cliente Registrado</label>
                     <select name="cliente_id" id="cliente_id" onchange="toggleClientType()" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium">
-                        <option value="">-- Cliente Casual (No Registrado) --</option>
+                        <option value="" data-puntos="0">-- Cliente Casual (No Registrado) --</option>
                         @foreach($clientes as $cliente)
-                            <option value="{{ $cliente->id }}">{{ $cliente->name }} ({{ $cliente->email }})</option>
+                            <option value="{{ $cliente->id }}" data-puntos="{{ $cliente->puntos ?? 0 }}">
+                                {{ $cliente->name }} ({{ $cliente->email }}) - {{ $cliente->puntos ?? 0 }} pts
+                            </option>
                         @endforeach
                     </select>
+                </div>
+
+                <!-- Bloque de Canje de Puntos de Fidelización -->
+                <div id="points-redemption-container" class="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border border-amber-200/70 space-y-3 hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black uppercase text-amber-700 flex items-center gap-1.5">
+                            <i class="fas fa-gem text-amber-500"></i> Descuento por Puntos
+                        </span>
+                        <span class="text-xs font-black text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full">
+                            <span id="client-points-display">0</span> Pts Disponibles
+                        </span>
+                    </div>
+
+                    <label class="flex items-center space-x-2 cursor-pointer pt-1">
+                        <input type="checkbox" name="usar_puntos" id="usar_puntos" value="1" onchange="togglePointsInput()" class="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500">
+                        <span class="text-xs font-bold text-stone-700">Usar Puntos para obtener descuento (1 Pt = 1 Bs)</span>
+                    </label>
+
+                    <div id="points-input-box" class="hidden space-y-1 pt-1">
+                        <label class="block text-[11px] font-extrabold uppercase text-amber-700">Puntos a Canjear</label>
+                        <input type="number" name="puntos_canjear" id="puntos_canjear" value="0" min="0" oninput="calculateAllTotals()" onchange="calculateAllTotals()" class="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-xs font-black text-amber-800 focus:ring-2 focus:ring-amber-400 focus:outline-none">
+                    </div>
                 </div>
 
                 <!-- Nombre Cliente Casual -->
@@ -83,6 +107,10 @@
                     <div class="flex justify-between text-sm text-rose-500 font-bold">
                         <span>Descuento Promos:</span>
                         <span id="label-descuento">-Bs0.00</span>
+                    </div>
+                    <div id="row-descuento-puntos" class="flex justify-between text-sm text-amber-600 font-bold hidden">
+                        <span class="flex items-center gap-1"><i class="fas fa-gem text-amber-500"></i> Descuento Puntos:</span>
+                        <span id="label-descuento-puntos">-Bs0.00</span>
                     </div>
                     <div class="border-t border-gray-200 pt-3 flex justify-between text-lg text-gray-800 font-black">
                         <span>Total:</span>
@@ -153,11 +181,55 @@
     function toggleClientType() {
         const clienteSelect = document.getElementById('cliente_id');
         const container = document.getElementById('casual-client-name-container');
+        const pointsContainer = document.getElementById('points-redemption-container');
+        const pointsDisplay = document.getElementById('client-points-display');
+        const pointsInput = document.getElementById('puntos_canjear');
+        const usarPuntosCheckbox = document.getElementById('usar_puntos');
+
         if (clienteSelect.value) {
             container.style.display = 'none';
+            const selectedOption = clienteSelect.options[clienteSelect.selectedIndex];
+            const puntos = parseInt(selectedOption.getAttribute('data-puntos')) || 0;
+
+            if (puntos > 0) {
+                pointsContainer.classList.remove('hidden');
+                pointsDisplay.textContent = puntos;
+                pointsInput.max = puntos;
+            } else {
+                pointsContainer.classList.add('hidden');
+                usarPuntosCheckbox.checked = false;
+                togglePointsInput();
+            }
         } else {
             container.style.display = 'block';
+            pointsContainer.classList.add('hidden');
+            usarPuntosCheckbox.checked = false;
+            togglePointsInput();
         }
+        calculateAllTotals();
+    }
+
+    function togglePointsInput() {
+        const checkbox = document.getElementById('usar_puntos');
+        const inputBox = document.getElementById('points-input-box');
+        const pointsInput = document.getElementById('puntos_canjear');
+        const rowDescuentoPuntos = document.getElementById('row-descuento-puntos');
+
+        if (checkbox.checked) {
+            inputBox.classList.remove('hidden');
+            rowDescuentoPuntos.classList.remove('hidden');
+            const clienteSelect = document.getElementById('cliente_id');
+            const selectedOption = clienteSelect.options[clienteSelect.selectedIndex];
+            const maxPuntos = parseInt(selectedOption.getAttribute('data-puntos')) || 0;
+            if (!parseInt(pointsInput.value)) {
+                pointsInput.value = maxPuntos;
+            }
+        } else {
+            inputBox.classList.add('hidden');
+            rowDescuentoPuntos.classList.add('hidden');
+            pointsInput.value = 0;
+        }
+        calculateAllTotals();
     }
 
     function addProductoRow() {
@@ -221,7 +293,6 @@
         const rows = document.querySelectorAll('.producto-row');
         let subtotalAcumulado = 0;
         let descuentoAcumulado = 0;
-        let totalAcumulado = 0;
 
         const hiddenContainer = document.getElementById('hidden-inputs-container');
         hiddenContainer.innerHTML = ''; // Limpiar inputs ocultos
@@ -243,7 +314,6 @@
 
                 subtotalAcumulado += sub;
                 descuentoAcumulado += desc;
-                totalAcumulado += (sub - desc);
 
                 // Crear inputs ocultos para enviar en el POST
                 hiddenContainer.innerHTML += `
@@ -253,9 +323,28 @@
             }
         });
 
+        // Cálculo del descuento por puntos
+        let descuentoPuntos = 0;
+        const usarPuntos = document.getElementById('usar_puntos').checked;
+        const puntosInput = parseInt(document.getElementById('puntos_canjear').value) || 0;
+
+        if (usarPuntos && puntosInput > 0) {
+            const clienteSelect = document.getElementById('cliente_id');
+            if (clienteSelect && clienteSelect.value) {
+                const selectedOption = clienteSelect.options[clienteSelect.selectedIndex];
+                const maxPuntosDisponibles = parseInt(selectedOption.getAttribute('data-puntos')) || 0;
+                
+                const totalAntesPuntos = Math.max(0, subtotalAcumulado - descuentoAcumulado);
+                descuentoPuntos = Math.min(puntosInput, maxPuntosDisponibles, totalAntesPuntos);
+            }
+        }
+
+        const totalFinal = Math.max(0, subtotalAcumulado - descuentoAcumulado - descuentoPuntos);
+
         document.getElementById('label-subtotal').innerText = `Bs${subtotalAcumulado.toFixed(2)}`;
         document.getElementById('label-descuento').innerText = `-Bs${descuentoAcumulado.toFixed(2)}`;
-        document.getElementById('label-total').innerText = `Bs${totalAcumulado.toFixed(2)}`;
+        document.getElementById('label-descuento-puntos').innerText = `-Bs${descuentoPuntos.toFixed(2)}`;
+        document.getElementById('label-total').innerText = `Bs${totalFinal.toFixed(2)}`;
     }
 </script>
 @endsection

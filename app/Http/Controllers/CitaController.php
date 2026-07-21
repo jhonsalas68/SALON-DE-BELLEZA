@@ -202,7 +202,30 @@ class CitaController extends Controller
             if ($promocion) {
                 $descuento = ($precioOriginal * $promocion->descuento_porcentaje) / 100;
             }
-            $precioFinal = $precioOriginal - $descuento;
+            $precioFinal = max(0, $precioOriginal - $descuento);
+
+            // Canje de puntos de fidelidad si fue solicitado
+            $descuentoPuntos = 0;
+            if ($request->filled('puntos_canjear') && $cita->cliente_id) {
+                $cliente = User::find($cita->cliente_id);
+                $puntosPedidos = (int) $request->puntos_canjear;
+                if ($cliente && $puntosPedidos > 0 && $cliente->puntos > 0) {
+                    $puntosEfectivos = min($puntosPedidos, $cliente->puntos, (int) floor($precioFinal));
+                    if ($puntosEfectivos > 0) {
+                        $descuentoPuntos = $puntosEfectivos;
+                        $precioFinal = max(0, $precioFinal - $descuentoPuntos);
+                        $cliente->decrement('puntos', $puntosEfectivos);
+
+                        \App\Models\PuntosHistorial::create([
+                            'user_id' => $cliente->id,
+                            'puntos' => $puntosEfectivos,
+                            'tipo' => 'canjeado',
+                            'descripcion' => "Descuento por canje de {$puntosEfectivos} puntos en Cita ID: {$cita->id}",
+                            'cita_id' => $cita->id
+                        ]);
+                    }
+                }
+            }
 
             // 3. Calculate Stylist Commission (CU8)
             $estilista = User::find($cita->estilista_id);

@@ -88,8 +88,11 @@
                             <!-- Acciones según estado (CU18, CU19) -->
                             @if($cita->estado !== 'completada' && $cita->estado !== 'cancelada')
                                 @if($cita->estilista_id)
-                                <form action="{{ route('citas.completar', $cita->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Registrar este servicio como realizado y generar comisión?');">
+                                <form action="{{ route('citas.completar', $cita->id) }}" method="POST" class="inline-flex items-center gap-1.5" onsubmit="return confirm('¿Registrar este servicio como realizado y generar comisión?');">
                                     @csrf
+                                    @if($cita->cliente && $cita->cliente->puntos > 0)
+                                        <input type="number" name="puntos_canjear" placeholder="Pts ({{ $cita->cliente->puntos }})" min="0" max="{{ $cita->cliente->puntos }}" class="w-24 px-2 py-1.5 bg-amber-50 border border-amber-300 rounded-xl text-xs font-black text-amber-800 placeholder-amber-600/60 focus:ring-1 focus:ring-amber-400" title="El cliente tiene {{ $cita->cliente->puntos }} puntos acumulados (1 Pt = 1 Bs)">
+                                    @endif
                                     <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors shadow-sm inline-flex items-center gap-1">
                                         <i class="fas fa-check-double"></i> Completar
                                     </button>

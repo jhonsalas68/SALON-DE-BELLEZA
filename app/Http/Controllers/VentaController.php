@@ -162,10 +162,34 @@ class VentaController extends Controller
                 $descuentoAcumulado += $descuentoItem;
             }
 
+            // Procesar canje de puntos de fidelidad para descuento si fue solicitado
+            $descuentoPuntos = 0;
+            if ($request->filled('usar_puntos') && $request->filled('puntos_canjear') && $venta->cliente_id) {
+                $cliente = User::find($venta->cliente_id);
+                $puntosPedidos = (int) $request->puntos_canjear;
+                if ($cliente && $puntosPedidos > 0 && $cliente->puntos > 0) {
+                    $totalAntesPuntos = max(0, $subtotalAcumulado - $descuentoAcumulado);
+                    $puntosEfectivos = min($puntosPedidos, $cliente->puntos, (int) floor($totalAntesPuntos));
+
+                    if ($puntosEfectivos > 0) {
+                        $descuentoPuntos = $puntosEfectivos;
+                        $cliente->decrement('puntos', $puntosEfectivos);
+
+                        \App\Models\PuntosHistorial::create([
+                            'user_id' => $cliente->id,
+                            'puntos' => $puntosEfectivos,
+                            'tipo' => 'canjeado',
+                            'descripcion' => "Descuento por canje de {$puntosEfectivos} puntos en Venta ID: {$venta->id}",
+                            'venta_id' => $venta->id
+                        ]);
+                    }
+                }
+            }
+
             // Update main sale values
             $venta->subtotal = $subtotalAcumulado;
-            $venta->descuento = $descuentoAcumulado;
-            $venta->total = max(0, $subtotalAcumulado - $descuentoAcumulado);
+            $venta->descuento = $descuentoAcumulado + $descuentoPuntos;
+            $venta->total = max(0, $subtotalAcumulado - $descuentoAcumulado - $descuentoPuntos);
             $venta->save();
 
             // Ocurrencia de puntos de lealtad (Opción 2)
