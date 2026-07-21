@@ -15,9 +15,14 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Ejecutar migraciones en segundo plano o con tolerancia a fallos para no bloquear el inicio de Nginx
+# Ejecutar migraciones con tolerancia a fallos
 echo "Ejecutando migraciones de base de datos..."
-php artisan migrate --force || echo "Aviso: No se pudieron ejecutar las migraciones en el arranque inicial. Se continuará con el inicio del servidor."
+php artisan migrate --force || echo "Aviso: No se pudieron ejecutar las migraciones en el arranque inicial."
+
+# Asegurar permisos correctos para www-data después de ejecutar artisan como root
+echo "Ajustando permisos de storage y bootstrap/cache..."
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache || true
+chmod -R 777 /var/www/storage /var/www/bootstrap/cache || true
 
 echo "Arrancando Supervisor (Nginx + PHP-FPM)..."
 exec "$@"
