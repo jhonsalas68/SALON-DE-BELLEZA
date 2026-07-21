@@ -46,6 +46,7 @@ class LandingController extends Controller
         $citas = collect();
         $compras = collect();
         $citasSinValorar = collect();
+        $puntosHistorial = collect();
 
         if (auth()->check()) {
             $citas = Cita::with(['servicio', 'estilista', 'valoracion'])
