@@ -72,6 +72,10 @@
                 @endif
                 <a href="{{ route('landing') }}#servicios" class="hover:text-amber-600 transition-colors">Servicios</a>
                 <a href="{{ route('landing') }}#productos" class="hover:text-amber-600 transition-colors">Tienda</a>
+                <a href="{{ route('valoraciones.index') }}" class="hover:text-amber-600 transition-colors flex items-center space-x-1">
+                    <i class="fas fa-star text-amber-500"></i>
+                    <span>Opiniones</span>
+                </a>
                 @auth
                     <a href="{{ route('landing') }}#portal" class="text-amber-600 hover:text-amber-700 flex items-center space-x-1">
                         <i class="fas fa-user-circle"></i>

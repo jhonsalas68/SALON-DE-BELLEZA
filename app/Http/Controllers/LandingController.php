@@ -45,9 +45,10 @@ class LandingController extends Controller
 
         $citas = collect();
         $compras = collect();
+        $citasSinValorar = collect();
 
         if (auth()->check()) {
-            $citas = Cita::with(['servicio', 'estilista'])
+            $citas = Cita::with(['servicio', 'estilista', 'valoracion'])
                 ->where('cliente_id', auth()->id())
                 ->orderBy('fecha', 'desc')
                 ->orderBy('hora', 'desc')
@@ -57,9 +58,15 @@ class LandingController extends Controller
                 ->where('cliente_id', auth()->id())
                 ->orderBy('fecha_venta', 'desc')
                 ->get();
+
+            $citasSinValorar = Cita::with(['servicio', 'estilista'])
+                ->where('cliente_id', auth()->id())
+                ->where('estado', 'completada')
+                ->whereDoesntHave('valoracion')
+                ->get();
         }
 
-        return view('landing', compact('servicios', 'productos', 'promociones', 'estilistas', 'citas', 'compras'));
+        return view('landing', compact('servicios', 'productos', 'promociones', 'estilistas', 'citas', 'compras', 'citasSinValorar'));
     }
 
     public function agendarCita(Request $request)
@@ -133,7 +140,28 @@ class LandingController extends Controller
 
         $horarios = $queryHorarios->get();
         if ($horarios->isEmpty()) {
-            return false;
+            $fallbackUserIds = [];
+            if ($estilistaId) {
+                $fallbackUserIds[] = (int) $estilistaId;
+            } else {
+                $fallbackUserIds = User::whereHas('role', function($q) {
+                    $q->where('slug', 'estilista');
+                })->pluck('id')->toArray();
+
+                if (empty($fallbackUserIds)) {
+                    $fallbackUserIds = [1];
+                }
+            }
+
+            $horarios = collect();
+            foreach ($fallbackUserIds as $uid) {
+                $horarios->push((object) [
+                    'user_id' => $uid,
+                    'hora_inicio' => '09:00:00',
+                    'hora_fin' => '18:30:00',
+                    'activo' => true
+                ]);
+            }
         }
 
         try {
@@ -360,7 +388,28 @@ class LandingController extends Controller
         $horarios = $queryHorarios->get();
 
         if ($horarios->isEmpty()) {
-            return response()->json([]);
+            $fallbackUserIds = [];
+            if ($estilistaId) {
+                $fallbackUserIds[] = (int) $estilistaId;
+            } else {
+                $fallbackUserIds = User::whereHas('role', function($q) {
+                    $q->where('slug', 'estilista');
+                })->pluck('id')->toArray();
+
+                if (empty($fallbackUserIds)) {
+                    $fallbackUserIds = [1];
+                }
+            }
+
+            $horarios = collect();
+            foreach ($fallbackUserIds as $uid) {
+                $horarios->push((object) [
+                    'user_id' => $uid,
+                    'hora_inicio' => '09:00:00',
+                    'hora_fin' => '18:30:00',
+                    'activo' => true
+                ]);
+            }
         }
 
         // Cargar todas las citas del día para estos estilistas de una sola vez

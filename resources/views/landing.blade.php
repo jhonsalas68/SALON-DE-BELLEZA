@@ -313,10 +313,22 @@
                                                 {{ $cita->estado }}
                                             </span>
                                             @if($cita->estado === 'completada')
-                                                <a href="{{ route('citas.show-ticket', $cita->id) }}" target="_blank" class="block text-[10px] text-indigo-600 hover:text-indigo-700 font-black flex items-center justify-end space-x-0.5">
-                                                    <i class="fas fa-ticket-alt"></i>
-                                                    <span>Ver Ticket</span>
-                                                </a>
+                                                <div class="flex items-center justify-end space-x-2">
+                                                    @if($cita->valoracion)
+                                                        <span class="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200/50">
+                                                            ★ {{ $cita->valoracion->estrellas }} Reseñada
+                                                        </span>
+                                                    @else
+                                                        <button onclick="openReviewModal('{{ $cita->id }}', '{{ $cita->servicio->nombre ?? 'Servicio' }}')" class="text-[10px] bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-extrabold px-2.5 py-1 rounded-lg shadow-sm transition-all flex items-center space-x-1">
+                                                            <i class="fas fa-star text-[9px]"></i>
+                                                            <span>Dar Reseña</span>
+                                                        </button>
+                                                    @endif
+                                                    <a href="{{ route('citas.show-ticket', $cita->id) }}" target="_blank" class="text-[10px] text-indigo-600 hover:text-indigo-700 font-black flex items-center space-x-0.5">
+                                                        <i class="fas fa-ticket-alt"></i>
+                                                        <span>Ticket</span>
+                                                    </a>
+                                                </div>
                                             @endif
                                         </div>
                                     </div>
@@ -443,6 +455,83 @@
             </div>
         </div>
     @endauth
+
+    <!-- Botón Flotante y Modal de Reseñas para Clientes -->
+    @auth
+        <button onclick="openReviewModal()" class="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-extrabold px-5 py-3 rounded-full shadow-2xl flex items-center space-x-2 transition-all transform hover:scale-105 active:scale-95 focus:outline-none">
+            <i class="fas fa-star text-base animate-bounce"></i>
+            <span class="text-xs font-black tracking-wide">Dejar Reseña</span>
+            @if(isset($citasSinValorar) && $citasSinValorar->count() > 0)
+                <span class="w-5 h-5 bg-white text-rose-600 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm">{{ $citasSinValorar->count() }}</span>
+            @endif
+        </button>
+
+        <!-- Modal de Valoración / Reseña -->
+        <div id="reviewModal" class="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+            <div class="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-stone-100 animate-in fade-in zoom-in-95 duration-200">
+                <div class="px-6 py-5 bg-gradient-to-r from-amber-500 to-rose-500 text-white flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-star text-xl text-amber-200"></i>
+                        <div>
+                            <h4 class="font-extrabold text-sm uppercase tracking-wider">Tu Calificación y Opinión</h4>
+                            <p class="text-[10px] text-amber-100 font-bold" id="reviewModalSubtitle">Califica el servicio o atención recibida</p>
+                        </div>
+                    </div>
+                    <button onclick="closeReviewModal()" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors text-white">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <form action="{{ route('valoraciones.store') }}" method="POST" class="p-6 space-y-4">
+                    @csrf
+                    <input type="hidden" name="cita_id" id="reviewCitaId">
+
+                    <!-- Selección de cita si no se pasa de forma directa -->
+                    <div id="citaSelectContainer" class="space-y-1.5">
+                        <label for="reviewCitaSelect" class="text-[11px] font-black text-stone-400 uppercase tracking-widest block">Servicio a Calificar</label>
+                        @if(isset($citasSinValorar) && $citasSinValorar->count() > 0)
+                            <select id="reviewCitaSelect" onchange="document.getElementById('reviewCitaId').value = this.value" class="w-full bg-stone-50 border border-stone-200 text-xs font-bold text-stone-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all">
+                                @foreach($citasSinValorar as $cs)
+                                    <option value="{{ $cs->id }}">{{ $cs->servicio->nombre }} - Atendido por {{ $cs->estilista->name ?? 'Estilista' }} ({{ \Carbon\Carbon::parse($cs->fecha)->format('d/m/Y') }})</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <div class="p-3 bg-amber-50 border border-amber-200/50 rounded-xl text-xs text-amber-700 font-medium">
+                                <i class="fas fa-info-circle mr-1"></i> Reseña u opinión general sobre la atención en Salón Anita.
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Puntuación Estrellas -->
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-black text-stone-400 uppercase tracking-widest block">Calificación (1 a 5 Estrellas)</label>
+                        <div class="flex items-center justify-between bg-stone-50 p-3 rounded-xl border border-stone-200">
+                            <input type="hidden" name="estrellas" id="review_estrellas_input" value="5" required>
+                            <div class="flex items-center space-x-1 cursor-pointer text-amber-400 text-2xl" id="review_stars_container">
+                                <i class="fas fa-star review-star-btn transition-transform duration-150" data-value="1"></i>
+                                <i class="fas fa-star review-star-btn transition-transform duration-150" data-value="2"></i>
+                                <i class="fas fa-star review-star-btn transition-transform duration-150" data-value="3"></i>
+                                <i class="fas fa-star review-star-btn transition-transform duration-150" data-value="4"></i>
+                                <i class="fas fa-star review-star-btn transition-transform duration-150" data-value="5"></i>
+                            </div>
+                            <span class="text-xs font-black text-amber-600" id="review_star_label">5.0 / Excelente</span>
+                        </div>
+                    </div>
+
+                    <!-- Comentario -->
+                    <div class="space-y-1.5">
+                        <label for="reviewComentario" class="text-[11px] font-black text-stone-400 uppercase tracking-widest block">Tu Opinión o Sugerencia (Opcional)</label>
+                        <textarea name="comentario" id="reviewComentario" rows="3" placeholder="¿Qué te pareció el trato, la puntualidad o los resultados? Cuéntanos tu experiencia..." class="w-full bg-stone-50 border border-stone-200 text-xs font-medium text-stone-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-200 transition-all resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-extrabold py-3.5 px-4 rounded-xl transition-all text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-amber-100 mt-2">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Publicar Mi Opinión</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    @endauth
 @endsection
 
 @section('scripts')
@@ -551,5 +640,89 @@
 
         if (fechaInput) fechaInput.addEventListener('change', fetchAvailableHours);
         if (estilistaSelect) estilistaSelect.addEventListener('change', fetchAvailableHours);
+
+        // Funciones del Modal de Reseñas
+        function openReviewModal(citaId = '', servicioNombre = '') {
+            const modal = document.getElementById('reviewModal');
+            if (!modal) return;
+
+            const citaIdInput = document.getElementById('reviewCitaId');
+            const subtitle = document.getElementById('reviewModalSubtitle');
+            const selectContainer = document.getElementById('citaSelectContainer');
+            const citaSelect = document.getElementById('reviewCitaSelect');
+
+            if (citaId) {
+                citaIdInput.value = citaId;
+                subtitle.textContent = `Calificando: ${servicioNombre}`;
+                if (selectContainer) selectContainer.classList.add('hidden');
+            } else {
+                if (citaSelect && citaSelect.value) {
+                    citaIdInput.value = citaSelect.value;
+                } else {
+                    citaIdInput.value = '';
+                }
+                subtitle.textContent = 'Califica el servicio o atención recibida';
+                if (selectContainer) selectContainer.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            if (modal) {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Lógica de estrellas interactivas en el modal de reseñas
+        document.addEventListener('DOMContentLoaded', function() {
+            const reviewStars = document.querySelectorAll('.review-star-btn');
+            const reviewInput = document.getElementById('review_estrellas_input');
+            const reviewLabel = document.getElementById('review_star_label');
+
+            if (!reviewStars.length || !reviewInput || !reviewLabel) return;
+
+            const labels = {
+                1: '1.0 / Deficiente',
+                2: '2.0 / Regular',
+                3: '3.0 / Bueno',
+                4: '4.0 / Muy Bueno',
+                5: '5.0 / Excelente'
+            };
+
+            reviewStars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const val = parseInt(this.getAttribute('data-value'));
+                    reviewInput.value = val;
+                    reviewLabel.textContent = labels[val] || (val + '.0');
+
+                    reviewStars.forEach((s, idx) => {
+                        if (idx < val) {
+                            s.classList.remove('text-stone-300');
+                            s.classList.add('text-amber-400');
+                        } else {
+                            s.classList.remove('text-amber-400');
+                            s.classList.add('text-stone-300');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseenter', function() {
+                    const val = parseInt(this.getAttribute('data-value'));
+                    reviewStars.forEach((s, idx) => {
+                        if (idx < val) {
+                            s.classList.add('scale-125');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseleave', function() {
+                    reviewStars.forEach(s => s.classList.remove('scale-125'));
+                });
+            });
+        });
     </script>
 @endsection

@@ -61,36 +61,51 @@ class ValoracionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'cita_id' => 'required|exists:citas,id',
+            'cita_id' => 'nullable|exists:citas,id',
             'estrellas' => 'required|integer|min:1|max:5',
             'comentario' => 'nullable|string|max:1000',
         ]);
 
-        $cita = Cita::findOrFail($request->cita_id);
+        $citaId = null;
+        $clienteId = auth()->id();
+        $estilistaId = null;
 
-        if ($cita->estado !== 'completada') {
-            return back()->with('error', 'Solo puedes calificar servicios completados.');
+        if ($request->filled('cita_id')) {
+            $cita = Cita::findOrFail($request->cita_id);
+
+            if ($cita->estado !== 'completada') {
+                return back()->with('error', 'Solo puedes calificar servicios completados.');
+            }
+
+            // Verificar si ya fue valorada
+            $existe = Valoracion::where('cita_id', $cita->id)->exists();
+            if ($existe) {
+                return back()->with('error', 'Esta cita ya ha sido valorada previamente.');
+            }
+
+            $citaId = $cita->id;
+            $clienteId = $cita->cliente_id ?: auth()->id();
+            $estilistaId = $cita->estilista_id;
         }
 
-        // Verificar si ya fue valorada
-        $existe = Valoracion::where('cita_id', $cita->id)->exists();
-        if ($existe) {
-            return back()->with('error', 'Esta cita ya ha sido valorada previamente.');
+        if (!$estilistaId) {
+            $primerEstilista = User::whereHas('role', function($q) { $q->where('slug', 'estilista'); })->first();
+            $estilistaId = $primerEstilista ? $primerEstilista->id : (auth()->id() ?: 1);
         }
 
         $valoracion = Valoracion::create([
-            'cita_id' => $cita->id,
-            'cliente_id' => $cita->cliente_id,
-            'estilista_id' => $cita->estilista_id,
+            'cita_id' => $citaId,
+            'cliente_id' => $clienteId,
+            'estilista_id' => $estilistaId,
             'estrellas' => $request->estrellas,
             'comentario' => $request->comentario,
             'fecha' => now(),
         ]);
 
         if (auth()->check()) {
-            $this->logActivity('CREATE_REVIEW', "Valoración de {$request->estrellas} estrellas registrada para Cita ID: {$cita->id}", $valoracion->toArray());
+            $this->logActivity('CREATE_REVIEW', "Valoración de {$request->estrellas} estrellas registrada", $valoracion->toArray());
         }
 
-        return back()->with('success', '¡Muchas gracias por valorar nuestro servicio!');
+        return back()->with('success', '¡Muchas gracias por tu valoración y opinión!');
     }
 }
