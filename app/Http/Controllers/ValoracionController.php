@@ -14,6 +14,8 @@ class ValoracionController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
+
         $valoraciones = Valoracion::with(['cliente', 'estilista', 'cita.servicio'])
             ->orderBy('fecha', 'desc')
             ->paginate(15);
