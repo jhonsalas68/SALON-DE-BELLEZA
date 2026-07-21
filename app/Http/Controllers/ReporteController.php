@@ -51,43 +51,42 @@ class ReporteController extends Controller
                 break;
 
             case 'servicios':
-                $headers = ['ID', 'Nombre', 'Categoría', 'Precio (Bs)', 'Duración (min)', 'Estado'];
-                $rows = Servicio::with('categoria')->get()->map(fn($s) => [
+                $headers = ['ID', 'Nombre', 'Descripción', 'Precio (Bs)', 'Duración', 'Estado'];
+                $rows = Servicio::get()->map(fn($s) => [
                     $s->id,
                     $s->nombre,
-                    $s->categoria->nombre ?? 'Sin Categoría',
+                    $s->descripcion ?? 'N/A',
                     number_format($s->precio, 2),
-                    $s->duracion_minutos,
+                    $s->duracion_minutos . ' min',
                     $s->activo ? 'Activo' : 'Inactivo'
                 ])->toArray();
                 $title = 'Catálogo de Servicios';
                 break;
 
             case 'productos':
-                $headers = ['ID', 'Código', 'Nombre', 'Categoría', 'Precio Compra (Bs)', 'Precio Venta (Bs)', 'Stock', 'Stock Mínimo'];
-                $rows = Producto::with('categoria')->get()->map(fn($p) => [
+                $headers = ['ID', 'Código', 'Nombre', 'Precio Compra (Bs)', 'Precio Venta (Bs)', 'Stock', 'Stock Mínimo', 'Vencimiento'];
+                $rows = Producto::get()->map(fn($p) => [
                     $p->id,
                     $p->codigo ?? 'N/A',
                     $p->nombre,
-                    $p->categoria->nombre ?? 'Sin Categoría',
                     number_format($p->precio_compra, 2),
                     number_format($p->precio_venta, 2),
                     $p->stock,
-                    $p->stock_minimo
+                    $p->stock_minimo,
+                    $p->fecha_caducidad ? \Carbon\Carbon::parse($p->fecha_caducidad)->format('d/m/Y') : 'N/A'
                 ])->toArray();
                 $title = 'Inventario de Productos';
                 break;
 
             case 'citas':
-                $headers = ['ID', 'Fecha', 'Hora', 'Cliente', 'Servicio', 'Estilista', 'Sucursal', 'Estado', 'Precio (Bs)'];
-                $rows = Cita::with(['cliente', 'servicio', 'estilista', 'sucursal'])->orderBy('fecha', 'desc')->get()->map(fn($c) => [
+                $headers = ['ID', 'Fecha', 'Hora', 'Cliente', 'Servicio', 'Estilista', 'Estado', 'Precio (Bs)'];
+                $rows = Cita::with(['cliente', 'servicio', 'estilista'])->orderBy('fecha', 'desc')->get()->map(fn($c) => [
                     $c->id,
                     $c->fecha,
                     $c->hora,
                     $c->cliente->name ?? 'Casual',
                     $c->servicio->nombre ?? 'N/A',
                     $c->estilista->name ?? 'No asignado',
-                    $c->sucursal->nombre ?? 'Principal',
                     strtoupper($c->estado),
                     number_format($c->servicio->precio ?? 0, 2)
                 ])->toArray();
